@@ -8,9 +8,21 @@ body,
 
 body {
   margin: 0;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 1) 0%,
-    rgb(130, 134, 139) 100%
-  );
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  header,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
 }
