@@ -27,7 +27,9 @@ const AppLayout = () => {
         }`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-slate-800">Minimal POS</h2>
+          <h2 className="text-lg font-semibold text-slate-800">
+            Abubakar's POS
+          </h2>
           <button
             type="button"
             className="md:hidden text-slate-500"

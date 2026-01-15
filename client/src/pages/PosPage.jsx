@@ -22,7 +22,7 @@ const PosPage = () => {
     queryFn: () => apiFetch('/settings'),
   });
 
-  const currencySymbol = settingsData?.data?.currencySymbol || '$';
+  const currencySymbol = settingsData?.data?.currencySymbol || 'PKR';
 
   const { data: productsData, isLoading } = useQuery({
     queryKey: ['products', search],
@@ -30,7 +30,8 @@ const PosPage = () => {
   });
 
   const createSaleMutation = useMutation({
-    mutationFn: (payload) => apiFetch('/sales', { method: 'POST', body: payload }),
+    mutationFn: (payload) =>
+      apiFetch('/sales', { method: 'POST', body: payload }),
     onSuccess: (response) => {
       toast.success('Sale completed');
       setCart([]);
@@ -60,9 +61,7 @@ const PosPage = () => {
   const updateQty = (id, qty) => {
     setCart((prev) =>
       prev
-        .map((item) =>
-          item.product._id === id ? { ...item, qty } : item,
-        )
+        .map((item) => (item.product._id === id ? { ...item, qty } : item))
         .filter((item) => item.qty > 0),
     );
   };
@@ -83,7 +82,7 @@ const PosPage = () => {
     let lineDiscountTotal = 0;
 
     cart.forEach((item) => {
-      const linePrice = item.product.salePriceCents * item.qty;
+      const linePrice = item.product.salePrice * item.qty;
       const lineSubtotal = linePrice - item.lineDiscountCents;
       const lineTax = Math.round(
         (lineSubtotal * (item.product.taxRate || 0)) / 100,
@@ -145,7 +144,9 @@ const PosPage = () => {
           type="number"
           min="0"
           value={row.qty}
-          onChange={(event) => updateQty(row.product._id, Number(event.target.value))}
+          onChange={(event) =>
+            updateQty(row.product._id, Number(event.target.value))
+          }
           className="w-20"
         />
       ),
@@ -153,7 +154,8 @@ const PosPage = () => {
     {
       key: 'price',
       label: 'Price',
-      render: (row) => formatCurrency(row.product.salePriceCents, currencySymbol),
+      render: (row) =>
+        formatCurrency(row.product.salePrice, currencySymbol),
     },
     {
       key: 'discount',
@@ -164,7 +166,9 @@ const PosPage = () => {
           min="0"
           step="0.01"
           value={(row.lineDiscountCents / 100).toFixed(2)}
-          onChange={(event) => updateLineDiscount(row.product._id, event.target.value)}
+          onChange={(event) =>
+            updateLineDiscount(row.product._id, event.target.value)
+          }
           className="w-28"
         />
       ),
@@ -174,7 +178,7 @@ const PosPage = () => {
       label: 'Line Total',
       render: (row) => {
         const lineTotal =
-          row.product.salePriceCents * row.qty - row.lineDiscountCents;
+          row.product.salePrice * row.qty - row.lineDiscountCents;
         return formatCurrency(lineTotal, currencySymbol);
       },
     },
@@ -207,9 +211,11 @@ const PosPage = () => {
                 className="rounded-lg border border-slate-200 p-3 text-left hover:border-blue-500"
               >
                 <p className="font-medium text-slate-800">{product.name}</p>
-                <p className="text-xs text-slate-500">{product.sku || 'No SKU'}</p>
+                <p className="text-xs text-slate-500">
+                  {product.sku || 'No SKU'}
+                </p>
                 <p className="mt-2 text-sm font-semibold text-blue-600">
-                  {formatCurrency(product.salePriceCents, currencySymbol)}
+                  {formatCurrency(product.salePrice, currencySymbol)}
                 </p>
               </button>
             ))}

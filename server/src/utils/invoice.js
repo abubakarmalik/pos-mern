@@ -1,7 +1,6 @@
 const Counter = require('../models/counter.model');
 
-const formatInvoiceNo = (dateKey, seq) =>
-  `POS-${dateKey}-${String(seq).padStart(4, '0')}`;
+const formatInvoiceNo = (dateKey, seq) => `POS-${dateKey}-${String(seq).padStart(4, '0')}`;
 
 const getNextInvoiceNo = async (session, date = new Date()) => {
   const dateKey = date.toISOString().slice(0, 10).replace(/-/g, '');
