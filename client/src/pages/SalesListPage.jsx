@@ -37,7 +37,7 @@ const SalesListPage = () => {
       ),
     },
     { key: 'createdAt', label: 'Date', render: (row) => new Date(row.createdAt).toLocaleString() },
-    { key: 'totalCents', label: 'Total', render: (row) => formatCurrency(row.totalCents) },
+    { key: 'total', label: 'Total', render: (row) => formatCurrency(row.total) },
     {
       key: 'status',
       label: 'Status',

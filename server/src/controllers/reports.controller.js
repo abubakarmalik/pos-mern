@@ -20,24 +20,24 @@ const getSummary = async (req, res, next) => {
         $group: {
           _id: null,
           salesCount: { $sum: 1 },
-          grossSubtotalCents: { $sum: '$subtotalCents' },
-          lineDiscountCents: { $sum: '$lineDiscountTotalCents' },
-          cartDiscountCents: { $sum: '$cartDiscountCents' },
-          discountCents: { $sum: '$discountTotalCents' },
-          taxCents: { $sum: '$taxTotalCents' },
-          netTotalCents: { $sum: '$totalCents' },
+          grossSubtotal: { $sum: '$subtotal' },
+          lineDiscount: { $sum: '$lineDiscountTotal' },
+          cartDiscount: { $sum: '$cartDiscount' },
+          discountTotal: { $sum: '$discountTotal' },
+          taxTotal: { $sum: '$taxTotal' },
+          netTotal: { $sum: '$total' },
         },
       },
     ]);
 
     return sendSuccess(res, {
       salesCount: summary?.salesCount || 0,
-      grossSubtotalCents: summary?.grossSubtotalCents || 0,
-      lineDiscountCents: summary?.lineDiscountCents || 0,
-      cartDiscountCents: summary?.cartDiscountCents || 0,
-      discountCents: summary?.discountCents || 0,
-      taxCents: summary?.taxCents || 0,
-      netTotalCents: summary?.netTotalCents || 0,
+      grossSubtotal: summary?.grossSubtotal || 0,
+      lineDiscount: summary?.lineDiscount || 0,
+      cartDiscount: summary?.cartDiscount || 0,
+      discountTotal: summary?.discountTotal || 0,
+      taxTotal: summary?.taxTotal || 0,
+      netTotal: summary?.netTotal || 0,
     });
   } catch (error) {
     return next(error);
@@ -59,7 +59,7 @@ const getTopProducts = async (req, res, next) => {
           name: { $first: '$items.nameSnapshot' },
           sku: { $first: '$items.skuSnapshot' },
           qtySold: { $sum: '$items.qty' },
-          revenueCents: { $sum: '$items.lineTotalCents' },
+          revenue: { $sum: '$items.lineTotal' },
         },
       },
       { $sort: { qtySold: -1 } },

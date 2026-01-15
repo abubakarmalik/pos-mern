@@ -10,7 +10,7 @@ const createSale = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { items, cartDiscountCents, paymentMethod, cashReceivedCents } =
+    const { items, cartDiscount, paymentMethod, cashReceived } =
       req.validated.body;
 
     const setting = await Setting.findOne().session(session);
@@ -24,9 +24,9 @@ const createSale = async (req, res, next) => {
       products.map((product) => [product._id.toString(), product]),
     );
 
-    let subtotalCents = 0;
-    let lineDiscountTotalCents = 0;
-    let taxTotalCents = 0;
+    let subtotal = 0;
+    let lineDiscountTotal = 0;
+    let taxTotal = 0;
 
     const saleItems = [];
     const ledgerEntries = [];
@@ -37,8 +37,8 @@ const createSale = async (req, res, next) => {
       if (!product.isActive)
         throw Object.assign(new Error('Product is inactive'), { status: 400 });
 
-      const linePrice = product.salePriceCents * item.qty;
-      if (item.lineDiscountCents > linePrice)
+      const linePrice = product.salePrice * item.qty;
+      if (item.lineDiscount > linePrice)
         throw Object.assign(new Error('Line discount exceeds line total'), {
           status: 400,
         });
@@ -46,15 +46,15 @@ const createSale = async (req, res, next) => {
       if (!allowNegativeStock && product.stockOnHand < item.qty)
         throw Object.assign(new Error('Insufficient stock'), { status: 400 });
 
-      const lineSubtotalCents = linePrice - item.lineDiscountCents;
-      const taxCents = Math.round(
-        (lineSubtotalCents * (product.taxRate || 0)) / 100,
+      const lineSubtotal = linePrice - item.lineDiscount;
+      const tax = Math.round(
+        (lineSubtotal * (product.taxRate || 0)) / 100,
       );
-      const lineTotalCents = lineSubtotalCents + taxCents;
+      const lineTotal = lineSubtotal + tax;
 
-      subtotalCents += lineSubtotalCents;
-      lineDiscountTotalCents += item.lineDiscountCents;
-      taxTotalCents += taxCents;
+      subtotal += lineSubtotal;
+      lineDiscountTotal += item.lineDiscount;
+      taxTotal += tax;
 
       saleItems.push({
         productId: product._id,
@@ -62,13 +62,13 @@ const createSale = async (req, res, next) => {
         skuSnapshot: product.sku || '',
         unitSnapshot: product.unit,
         qty: item.qty,
-        costPriceCentsSnapshot: product.costPriceCents,
-        salePriceCentsSnapshot: product.salePriceCents,
+        costPriceSnapshot: product.costPrice,
+        salePriceSnapshot: product.salePrice,
         taxRateSnapshot: product.taxRate,
-        lineDiscountCents: item.lineDiscountCents,
-        lineSubtotalCents,
-        taxCents,
-        lineTotalCents,
+        lineDiscount: item.lineDiscount,
+        lineSubtotal,
+        tax,
+        lineTotal,
       });
 
       product.stockOnHand -= item.qty;
@@ -85,21 +85,21 @@ const createSale = async (req, res, next) => {
       });
     }
 
-    const discountTotalCents = lineDiscountTotalCents + cartDiscountCents;
-    const totalCents = Math.max(
-      subtotalCents + taxTotalCents - cartDiscountCents,
+    const discountTotal = lineDiscountTotal + cartDiscount;
+    const total = Math.max(
+      subtotal + taxTotal - cartDiscount,
       0,
     );
 
-    let changeDueCents = null;
+    let changeDue = null;
     if (paymentMethod === 'CASH') {
-      if (cashReceivedCents == null)
+      if (cashReceived == null)
         throw Object.assign(new Error('Cash received required'), { status: 400 });
-      if (cashReceivedCents < totalCents)
+      if (cashReceived < total)
         throw Object.assign(new Error('Cash received is less than total'), {
           status: 400,
         });
-      changeDueCents = cashReceivedCents - totalCents;
+      changeDue = cashReceived - total;
     }
 
     const invoiceNo = await getNextInvoiceNo(session);
@@ -110,15 +110,15 @@ const createSale = async (req, res, next) => {
           invoiceNo,
           cashierId: req.user.id,
           items: saleItems,
-          subtotalCents,
-          lineDiscountTotalCents,
-          cartDiscountCents,
-          discountTotalCents,
-          taxTotalCents,
-          totalCents,
+          subtotal,
+          lineDiscountTotal,
+          cartDiscount,
+          discountTotal,
+          taxTotal,
+          total,
           paymentMethod,
-          cashReceivedCents: paymentMethod === 'CASH' ? cashReceivedCents : null,
-          changeDueCents: paymentMethod === 'CASH' ? changeDueCents : null,
+          cashReceived: paymentMethod === 'CASH' ? cashReceived : null,
+          changeDue: paymentMethod === 'CASH' ? changeDue : null,
         },
       ],
       { session },

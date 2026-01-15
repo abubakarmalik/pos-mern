@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "migrate:prices": "node scripts/migrate-cents-to-pkr.js",
     "seed": "node seed.js",
     "lint": "eslint .",
     "format": "prettier --write ."

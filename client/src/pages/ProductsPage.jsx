@@ -43,7 +43,7 @@ const ProductsPage = () => {
       ),
     },
     { key: 'category', label: 'Category', render: (row) => row.category || '-' },
-    { key: 'price', label: 'Price', render: (row) => formatCurrency(row.salePriceCents) },
+    { key: 'price', label: 'Price', render: (row) => formatCurrency(row.salePrice) },
     {
       key: 'status',
       label: 'Status',
