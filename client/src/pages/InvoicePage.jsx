@@ -21,7 +21,7 @@ const InvoicePage = () => {
 
   const sale = saleData?.data;
   const settings = settingsData?.data;
-  const currencySymbol = settings?.currencySymbol || '$';
+  const currencySymbol = settings?.currencySymbol || 'PKR';
 
   if (!sale) return <div>Sale not found.</div>;
 
@@ -63,10 +63,10 @@ const InvoicePage = () => {
                 </td>
                 <td className="px-4 py-2">{item.qty}</td>
                 <td className="px-4 py-2">
-                  {formatCurrency(item.salePriceCentsSnapshot, currencySymbol)}
+                  {formatCurrency(item.salePriceSnapshot, currencySymbol)}
                 </td>
                 <td className="px-4 py-2">
-                  {formatCurrency(item.lineTotalCents, currencySymbol)}
+                  {formatCurrency(item.lineTotal, currencySymbol)}
                 </td>
               </tr>
             ))}
@@ -77,26 +77,26 @@ const InvoicePage = () => {
       <div className="rounded-lg bg-white p-4 shadow">
         <div className="flex justify-between text-sm text-slate-600">
           <span>Subtotal</span>
-          <span>{formatCurrency(sale.subtotalCents, currencySymbol)}</span>
+          <span>{formatCurrency(sale.subtotal, currencySymbol)}</span>
         </div>
         <div className="flex justify-between text-sm text-slate-600">
           <span>Discounts</span>
-          <span>{formatCurrency(sale.discountTotalCents, currencySymbol)}</span>
+          <span>{formatCurrency(sale.discountTotal, currencySymbol)}</span>
         </div>
         <div className="flex justify-between text-sm text-slate-600">
           <span>Tax</span>
-          <span>{formatCurrency(sale.taxTotalCents, currencySymbol)}</span>
+          <span>{formatCurrency(sale.taxTotal, currencySymbol)}</span>
         </div>
         <div className="mt-2 flex justify-between text-base font-semibold text-slate-800">
           <span>Total</span>
-          <span>{formatCurrency(sale.totalCents, currencySymbol)}</span>
+          <span>{formatCurrency(sale.total, currencySymbol)}</span>
         </div>
         <div className="mt-2 text-sm text-slate-500">
           <p>Payment: {sale.paymentMethod}</p>
           {sale.paymentMethod === 'CASH' && (
             <p>
-              Cash: {formatCurrency(sale.cashReceivedCents, currencySymbol)} | Change:{' '}
-              {formatCurrency(sale.changeDueCents, currencySymbol)}
+              Cash: {formatCurrency(sale.cashReceived, currencySymbol)} | Change:{' '}
+              {formatCurrency(sale.changeDue, currencySymbol)}
             </p>
           )}
         </div>

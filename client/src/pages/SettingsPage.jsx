@@ -11,7 +11,7 @@ const SettingsPage = () => {
     shopName: '',
     address: '',
     phone: '',
-    currencySymbol: '$',
+    currencySymbol: 'PKR',
     allowNegativeStock: false,
   });
 

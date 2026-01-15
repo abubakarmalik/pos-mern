@@ -3,15 +3,15 @@ const { z } = require('zod');
 const saleItemSchema = z.object({
   productId: z.string().min(1),
   qty: z.number().int().min(1),
-  lineDiscountCents: z.number().int().min(0).optional().default(0),
+  lineDiscount: z.number().min(0).optional().default(0),
 });
 
 const createSaleSchema = z.object({
   body: z.object({
     items: z.array(saleItemSchema).min(1),
-    cartDiscountCents: z.number().int().min(0).optional().default(0),
+    cartDiscount: z.number().min(0).optional().default(0),
     paymentMethod: z.enum(['CASH', 'CARD']),
-    cashReceivedCents: z.number().int().min(0).optional().nullable(),
+    cashReceived: z.number().min(0).optional().nullable(),
   }),
 });
 

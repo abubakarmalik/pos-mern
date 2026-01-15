@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
-import { formatCurrency, toCents } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 
 const PosPage = () => {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ const PosPage = () => {
             : item,
         );
       }
-      return [...prev, { product, qty: 1, lineDiscountCents: 0 }];
+      return [...prev, { product, qty: 1, lineDiscount: 0 }];
     });
   };
 
@@ -67,10 +67,12 @@ const PosPage = () => {
   };
 
   const updateLineDiscount = (id, value) => {
+    const parsed = Number(value);
+    const amount = Number.isNaN(parsed) ? 0 : parsed;
     setCart((prev) =>
       prev.map((item) =>
         item.product._id === id
-          ? { ...item, lineDiscountCents: toCents(value) }
+          ? { ...item, lineDiscount: amount }
           : item,
       ),
     );
@@ -83,24 +85,24 @@ const PosPage = () => {
 
     cart.forEach((item) => {
       const linePrice = item.product.salePrice * item.qty;
-      const lineSubtotal = linePrice - item.lineDiscountCents;
+      const lineSubtotal = linePrice - item.lineDiscount;
       const lineTax = Math.round(
         (lineSubtotal * (item.product.taxRate || 0)) / 100,
       );
       subtotal += lineSubtotal;
       tax += lineTax;
-      lineDiscountTotal += item.lineDiscountCents;
+      lineDiscountTotal += item.lineDiscount;
     });
 
-    const cartDiscountCents = toCents(cartDiscount);
-    const total = Math.max(subtotal + tax - cartDiscountCents, 0);
+    const cartDiscountAmount = Number(cartDiscount) || 0;
+    const total = Math.max(subtotal + tax - cartDiscountAmount, 0);
 
-    return { subtotal, tax, lineDiscountTotal, cartDiscountCents, total };
+    return { subtotal, tax, lineDiscountTotal, cartDiscountAmount, total };
   }, [cart, cartDiscount]);
 
   const changeDue = useMemo(() => {
     if (paymentMethod !== 'CASH') return 0;
-    const received = toCents(cashReceived);
+    const received = Number(cashReceived) || 0;
     return Math.max(received - totals.total, 0);
   }, [cashReceived, paymentMethod, totals.total]);
 
@@ -114,12 +116,11 @@ const PosPage = () => {
       items: cart.map((item) => ({
         productId: item.product._id,
         qty: item.qty,
-        lineDiscountCents: item.lineDiscountCents,
+        lineDiscount: item.lineDiscount,
       })),
-      cartDiscountCents: totals.cartDiscountCents,
+      cartDiscount: totals.cartDiscountAmount,
       paymentMethod,
-      cashReceivedCents:
-        paymentMethod === 'CASH' ? toCents(cashReceived) : null,
+      cashReceived: paymentMethod === 'CASH' ? Number(cashReceived) || 0 : null,
     };
 
     createSaleMutation.mutate(payload);
@@ -165,7 +166,7 @@ const PosPage = () => {
           type="number"
           min="0"
           step="0.01"
-          value={(row.lineDiscountCents / 100).toFixed(2)}
+          value={row.lineDiscount}
           onChange={(event) =>
             updateLineDiscount(row.product._id, event.target.value)
           }
@@ -178,7 +179,7 @@ const PosPage = () => {
       label: 'Line Total',
       render: (row) => {
         const lineTotal =
-          row.product.salePrice * row.qty - row.lineDiscountCents;
+          row.product.salePrice * row.qty - row.lineDiscount;
         return formatCurrency(lineTotal, currencySymbol);
       },
     },
@@ -251,7 +252,7 @@ const PosPage = () => {
                 <span>Discounts</span>
                 <span>
                   {formatCurrency(
-                    totals.lineDiscountTotal + totals.cartDiscountCents,
+                    totals.lineDiscountTotal + totals.cartDiscountAmount,
                     currencySymbol,
                   )}
                 </span>

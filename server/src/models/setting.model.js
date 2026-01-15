@@ -5,7 +5,7 @@ const settingSchema = new mongoose.Schema(
     shopName: { type: String, default: 'My Shop' },
     address: { type: String, default: '' },
     phone: { type: String, default: '' },
-    currencySymbol: { type: String, default: '$' },
+    currencySymbol: { type: String, default: 'PKR' },
     allowNegativeStock: { type: Boolean, default: false },
   },
   { timestamps: true },

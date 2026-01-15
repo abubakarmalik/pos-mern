@@ -69,13 +69,13 @@ const SaleDetailPage = () => {
                   <p className="text-xs text-slate-500">{item.skuSnapshot}</p>
                 </td>
                 <td className="py-2">{item.qty}</td>
-                <td className="py-2">{formatCurrency(item.lineTotalCents)}</td>
+                <td className="py-2">{formatCurrency(item.lineTotal)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="mt-4 text-sm text-slate-600">
-          <p>Total: {formatCurrency(sale.totalCents)}</p>
+          <p>Total: {formatCurrency(sale.total)}</p>
           <p>Status: {sale.status}</p>
         </div>
       </div>

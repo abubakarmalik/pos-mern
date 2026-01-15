@@ -46,7 +46,7 @@ const ReportsPage = () => {
     { key: 'name', label: 'Product' },
     { key: 'sku', label: 'SKU' },
     { key: 'qtySold', label: 'Qty Sold' },
-    { key: 'revenueCents', label: 'Revenue', render: (row) => formatCurrency(row.revenueCents) },
+    { key: 'revenue', label: 'Revenue', render: (row) => formatCurrency(row.revenue) },
   ];
 
   return (
@@ -58,7 +58,7 @@ const ReportsPage = () => {
             <h3 className="text-sm font-semibold text-slate-600">Today</h3>
             <p className="text-sm text-slate-500">Sales: {todaySummary?.data?.salesCount || 0}</p>
             <p className="text-sm text-slate-500">
-              Net: {formatCurrency(todaySummary?.data?.netTotalCents || 0)}
+              Net: {formatCurrency(todaySummary?.data?.netTotal || 0)}
             </p>
           </div>
           <div className="rounded-lg border border-slate-200 p-4">
@@ -68,7 +68,7 @@ const ReportsPage = () => {
               <Input type="date" label="To" value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
             <p className="mt-2 text-sm text-slate-500">Sales: {summary.salesCount || 0}</p>
-            <p className="text-sm text-slate-500">Net: {formatCurrency(summary.netTotalCents || 0)}</p>
+            <p className="text-sm text-slate-500">Net: {formatCurrency(summary.netTotal || 0)}</p>
           </div>
         </div>
       </div>

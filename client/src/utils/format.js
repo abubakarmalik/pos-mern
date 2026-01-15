@@ -1,9 +1,8 @@
-export const formatCurrency = (valueCents, currencySymbol = '$') => {
-  const amount = (valueCents || 0) / 100;
-  return `${currencySymbol}${amount.toFixed(2)}`;
-};
-
-export const toCents = (value) => {
-  if (value === '' || value == null) return 0;
-  return Math.round(Number(value) * 100);
+export const formatCurrency = (amount, currencySymbol = 'PKR') => {
+  const safeAmount = Number(amount ?? 0);
+  const formatted = new Intl.NumberFormat('en-PK', {
+    minimumFractionDigits: safeAmount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(safeAmount);
+  return currencySymbol ? `${currencySymbol} ${formatted}` : formatted;
 };

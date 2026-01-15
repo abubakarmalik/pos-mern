@@ -11,8 +11,8 @@ const defaultForm = {
   name: '',
   sku: '',
   category: '',
-  costPriceCents: 0,
-  salePriceCents: 0,
+  costPrice: 0,
+  salePrice: 0,
   taxRate: 0,
   unit: 'pcs',
   minStock: '',
@@ -38,8 +38,8 @@ const ProductFormPage = () => {
         name: product.name,
         sku: product.sku || '',
         category: product.category || '',
-        costPriceCents: product.costPriceCents,
-        salePriceCents: product.salePriceCents,
+        costPrice: product.costPrice,
+        salePrice: product.salePrice,
         taxRate: product.taxRate,
         unit: product.unit,
         minStock: product.minStock ?? '',
@@ -75,8 +75,8 @@ const ProductFormPage = () => {
     const payload = {
       ...form,
       minStock: form.minStock === '' ? null : Number(form.minStock),
-      costPriceCents: Number(form.costPriceCents),
-      salePriceCents: Number(form.salePriceCents),
+      costPrice: Number(form.costPrice),
+      salePrice: Number(form.salePrice),
       taxRate: Number(form.taxRate),
       stockOnHand: Number(form.stockOnHand),
     };
@@ -93,8 +93,8 @@ const ProductFormPage = () => {
         <Input label="SKU" name="sku" value={form.sku} onChange={handleChange} />
         <Input label="Category" name="category" value={form.category} onChange={handleChange} />
         <Input label="Unit" name="unit" value={form.unit} onChange={handleChange} />
-        <Input label="Cost Price (cents)" name="costPriceCents" type="number" min="0" value={form.costPriceCents} onChange={handleChange} />
-        <Input label="Sale Price (cents)" name="salePriceCents" type="number" min="0" value={form.salePriceCents} onChange={handleChange} />
+        <Input label="Cost Price (PKR)" name="costPrice" type="number" min="0" step="0.01" value={form.costPrice} onChange={handleChange} />
+        <Input label="Sale Price (PKR)" name="salePrice" type="number" min="0" step="0.01" value={form.salePrice} onChange={handleChange} />
         <Input label="Tax Rate (%)" name="taxRate" type="number" min="0" value={form.taxRate} onChange={handleChange} />
         <Input label="Min Stock" name="minStock" type="number" min="0" value={form.minStock} onChange={handleChange} />
         <Input label="Stock On Hand" name="stockOnHand" type="number" value={form.stockOnHand} onChange={handleChange} />
