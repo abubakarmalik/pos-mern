@@ -1,4 +1,4 @@
-import { getToken } from '../auth/authStorage';
+import { getToken } from '../utils/authStorage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 

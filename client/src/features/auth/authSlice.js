@@ -4,7 +4,7 @@ import {
   clearAuthStorage,
   getAuthStorage,
   setAuthStorage,
-} from '../../auth/authStorage';
+} from '../../utils/authStorage';
 
 const authStorage = getAuthStorage();
 
