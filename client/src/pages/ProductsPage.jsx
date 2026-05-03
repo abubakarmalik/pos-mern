@@ -8,10 +8,11 @@ import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import Table from '../components/ui/Table';
 import { formatCurrency } from '../utils/format';
-import { useAuth } from '../auth/AuthProvider';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSelector';
 
 const ProductsPage = () => {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
 

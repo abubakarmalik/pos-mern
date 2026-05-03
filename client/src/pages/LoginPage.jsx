@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { useAuth } from '../auth/AuthProvider';
+import { login } from '../features/auth/authSlice';
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ const LoginPage = () => {
     event.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      await dispatch(login({ email: form.email, password: form.password })).unwrap();
       toast.success('Welcome back!');
       navigate('/pos');
     } catch (error) {

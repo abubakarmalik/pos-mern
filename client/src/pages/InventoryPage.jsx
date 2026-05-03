@@ -7,10 +7,11 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
-import { useAuth } from '../auth/AuthProvider';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSelector';
 
 const InventoryPage = () => {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const queryClient = useQueryClient();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);

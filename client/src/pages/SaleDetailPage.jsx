@@ -7,11 +7,12 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import { formatCurrency } from '../utils/format';
-import { useAuth } from '../auth/AuthProvider';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSelector';
 
 const SaleDetailPage = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const queryClient = useQueryClient();
   const [refundOpen, setRefundOpen] = useState(false);
   const [reason, setReason] = useState('');
