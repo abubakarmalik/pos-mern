@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { apiFetch } from '../api/client';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
+import { fetchSettings, updateSettings } from '../features/settings/settingsSlice';
+import {
+  selectSettings,
+  selectSettingsSaving,
+} from '../features/settings/selectors';
 
 const SettingsPage = () => {
+  const dispatch = useDispatch();
+  const settings = useSelector(selectSettings);
+  const isSaving = useSelector(selectSettingsSaving);
   const [form, setForm] = useState({
     shopName: '',
     address: '',
@@ -15,22 +22,15 @@ const SettingsPage = () => {
     allowNegativeStock: false,
   });
 
-  const { data: settingsData } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => apiFetch('/settings'),
-  });
+  useEffect(() => {
+    dispatch(fetchSettings())
+      .unwrap()
+      .catch((error) => toast.error(error.message));
+  }, [dispatch]);
 
   useEffect(() => {
-    if (settingsData?.data) {
-      setForm(settingsData.data);
-    }
-  }, [settingsData]);
-
-  const mutation = useMutation({
-    mutationFn: (payload) => apiFetch('/settings', { method: 'PATCH', body: payload }),
-    onSuccess: () => toast.success('Settings updated'),
-    onError: (error) => toast.error(error.message),
-  });
+    if (settings) setForm(settings);
+  }, [settings]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -39,10 +39,13 @@ const SettingsPage = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    mutation.mutate({
+    dispatch(updateSettings({
       ...form,
       allowNegativeStock: form.allowNegativeStock === 'true' || form.allowNegativeStock === true,
-    });
+    }))
+      .unwrap()
+      .then(() => toast.success('Settings updated'))
+      .catch((error) => toast.error(error.message));
   };
 
   return (
@@ -63,8 +66,8 @@ const SettingsPage = () => {
           <option value="true">Yes</option>
         </Select>
         <div className="md:col-span-2 flex justify-end">
-          <Button type="submit" disabled={mutation.isLoading}>
-            {mutation.isLoading ? 'Saving...' : 'Save Settings'}
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </form>

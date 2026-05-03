@@ -1,8 +1,9 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 import { logout } from '../features/auth/authSlice';
-import { selectUser } from '../features/auth/authSelector';
+import { selectAuthLoading, selectUser } from '../features/auth/authSelector';
 
 const navItems = [
   { to: '/pos', label: 'POS' },
@@ -15,12 +16,25 @@ const navItems = [
 
 const AppLayout = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector(selectUser);
+  const isAuthLoading = useSelector(selectAuthLoading);
   const [open, setOpen] = useState(false);
 
   const filteredItems = navItems.filter(
     (item) => !item.role || item.role === user?.role,
   );
+
+  const handleLogout = async () => {
+    try {
+      const response = await dispatch(logout()).unwrap();
+      toast.success(response?.message || 'Logout successful');
+      navigate('/login', { replace: true });
+    } catch {
+      toast.success('Logged out');
+      navigate('/login', { replace: true });
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -75,10 +89,11 @@ const AppLayout = () => {
           </div>
           <button
             type="button"
-            onClick={() => dispatch(logout())}
+            onClick={handleLogout}
+            disabled={isAuthLoading}
             className="text-sm font-medium text-slate-600 hover:text-slate-900"
           >
-            Logout
+            {isAuthLoading ? 'Logging out...' : 'Logout'}
           </button>
         </header>
         <main className="flex-1 p-6">

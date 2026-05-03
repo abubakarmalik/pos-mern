@@ -1,15 +1,13 @@
-import axios from 'axios';
-import { getToken } from '../../utils/authStorage';
+import apiClient from '../../api/client';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+export const fetchProductsApi = (search = '') =>
+  apiClient.get('/products', { params: search ? { search } : undefined });
 
-const productsApiClient = axios.create({ baseURL, headers: { 'Content-Type': 'application/json' } });
+export const fetchProductApi = (id) => apiClient.get(`/products/${id}`);
 
-productsApiClient.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+export const createProductApi = (payload) => apiClient.post('/products', payload);
 
-export const fetchProductsApi = (search = '') => productsApiClient.get('/products', { params: { search } });
-export const toggleProductApi = (id) => productsApiClient.patch(`/products/${id}/toggle`);
+export const updateProductApi = (id, payload) =>
+  apiClient.patch(`/products/${id}`, payload);
+
+export const toggleProductApi = (id) => apiClient.patch(`/products/${id}/toggle`);

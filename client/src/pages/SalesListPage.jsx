@@ -1,65 +1,37 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { apiFetch } from '../api/client';
-import Table from '../components/ui/Table';
-import Input from '../components/ui/Input';
-import Badge from '../components/ui/Badge';
-import { formatCurrency } from '../utils/format';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import SalesFilters from '../components/sales/SalesFilters';
+import SalesTable from '../components/sales/SalesTable';
+import { fetchSales } from '../features/sales/salesSlice';
+import {
+  selectSales,
+  selectSalesLoading,
+} from '../features/sales/selectors';
 
 const SalesListPage = () => {
+  const dispatch = useDispatch();
+  const sales = useSelector(selectSales);
+  const isLoading = useSelector(selectSalesLoading);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
 
-  const { data: salesData, isLoading } = useQuery({
-    queryKey: ['sales', from, to],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (from) params.append('from', from);
-      if (to) params.append('to', to);
-      return apiFetch(`/sales?${params.toString()}`);
-    },
-  });
-
-  const sales = salesData?.data || [];
-
-  const columns = [
-    {
-      key: 'invoiceNo',
-      label: 'Invoice',
-      render: (row) => (
-        <Link
-          to={`/sales/${row._id}`}
-          className="font-medium text-blue-600 hover:underline"
-        >
-          {row.invoiceNo}
-        </Link>
-      ),
-    },
-    { key: 'createdAt', label: 'Date', render: (row) => new Date(row.createdAt).toLocaleString() },
-    { key: 'total', label: 'Total', render: (row) => formatCurrency(row.total) },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (row) => (
-        <Badge variant={row.status === 'REFUNDED' ? 'danger' : 'success'}>
-          {row.status}
-        </Badge>
-      ),
-    },
-  ];
+  useEffect(() => {
+    dispatch(fetchSales({ from, to }))
+      .unwrap()
+      .catch((error) => toast.error(error.message));
+  }, [dispatch, from, to]);
 
   return (
     <div className="space-y-4">
+      <SalesFilters
+        from={from}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        to={to}
+      />
       <div className="rounded-xl bg-white p-4 shadow">
-        <h2 className="text-lg font-semibold text-slate-800">Sales</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <Input type="date" label="From" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <Input type="date" label="To" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
-      </div>
-      <div className="rounded-xl bg-white p-4 shadow">
-        {isLoading ? <p className="text-sm text-slate-500">Loading...</p> : <Table columns={columns} data={sales} />}
+        <SalesTable isLoading={isLoading} sales={sales} />
       </div>
     </div>
   );

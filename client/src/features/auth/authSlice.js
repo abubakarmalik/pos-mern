@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { clearAuthStorage, getAuthStorage, setAuthStorage } from '../../utils/authStorage';
-import { fetchCurrentUserApi, loginUser } from './api';
+import { fetchCurrentUserApi, loginUser, logoutUser } from './api';
 
 const authStorage = getAuthStorage();
 
@@ -33,9 +33,15 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }, 
   }
 });
 
-export const logout = createAsyncThunk('auth/logout', async () => {
-  clearAuthStorage();
-  return { message: 'Logged out' };
+export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+  try {
+    const response = await logoutUser();
+    clearAuthStorage();
+    return response.data;
+  } catch (error) {
+    clearAuthStorage();
+    return rejectWithValue(error.response?.data || { message: error.message });
+  }
 });
 
 const authSlice = createSlice({
@@ -79,11 +85,24 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload?.message || action.error.message;
       })
+      .addCase(logout.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(logout.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        state.message = action.payload.message;
+        state.message = action.payload?.message || 'Logged out';
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.message = 'Logged out locally';
+        state.error = action.payload?.message || action.error.message;
       });
   },
 });

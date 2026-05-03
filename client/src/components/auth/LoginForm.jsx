@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import { login } from './authSlice';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+import { login } from '../../features/auth/authSlice';
+import { selectAuthLoading } from '../../features/auth/authSelector';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isLoading = useSelector((state) => state.auth.isLoading);
+  const isLoading = useSelector(selectAuthLoading);
   const [form, setForm] = useState({ email: '', password: '' });
 
   const handleSubmit = async (event) => {

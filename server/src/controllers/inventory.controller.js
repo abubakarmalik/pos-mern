@@ -7,13 +7,24 @@ const adjustStock = async (req, res, next) => {
   try {
     const { productId, qtyChange, note } = req.validated.body;
     const product = await Product.findById(productId);
-    if (!product) return sendError(res, 404, 'Product not found');
+    if (!product)
+      return sendError(res, 404, 'Product not found', {
+        code: 'PRODUCT_NOT_FOUND',
+        details: { productId },
+      });
 
     const setting = await Setting.findOne();
     const allowNegativeStock = setting?.allowNegativeStock ?? false;
     const newStock = product.stockOnHand + qtyChange;
     if (!allowNegativeStock && newStock < 0)
-      return sendError(res, 400, 'Stock cannot be negative');
+      return sendError(res, 400, 'Stock cannot be negative', {
+        code: 'NEGATIVE_STOCK_NOT_ALLOWED',
+        details: {
+          productId,
+          stockOnHand: product.stockOnHand,
+          qtyChange,
+        },
+      });
 
     product.stockOnHand = newStock;
     await product.save();
@@ -28,7 +39,7 @@ const adjustStock = async (req, res, next) => {
       createdBy: req.user.id,
     });
 
-    return sendSuccess(res, { product, ledger });
+    return sendSuccess(res, { product, ledger }, 'Stock adjusted');
   } catch (error) {
     return next(error);
   }
@@ -45,7 +56,7 @@ const listLedger = async (req, res, next) => {
       if (to) query.createdAt.$lte = new Date(to);
     }
     const ledger = await StockLedger.find(query).sort({ createdAt: -1 });
-    return sendSuccess(res, ledger);
+    return sendSuccess(res, ledger, 'Stock ledger fetched');
   } catch (error) {
     return next(error);
   }

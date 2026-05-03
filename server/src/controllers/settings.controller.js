@@ -7,7 +7,7 @@ const getSettings = async (_req, res, next) => {
     if (!setting) {
       setting = await Setting.create({});
     }
-    return sendSuccess(res, setting);
+    return sendSuccess(res, setting, 'Settings fetched');
   } catch (error) {
     return next(error);
   }
@@ -21,7 +21,7 @@ const updateSettings = async (req, res, next) => {
     Object.assign(setting, req.validated.body);
     await setting.save();
 
-    return sendSuccess(res, setting);
+    return sendSuccess(res, setting, 'Settings updated');
   } catch (error) {
     return next(error);
   }

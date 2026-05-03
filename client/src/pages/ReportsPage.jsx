@@ -1,46 +1,45 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiFetch } from '../api/client';
+import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
 import Input from '../components/ui/Input';
 import Table from '../components/ui/Table';
+import {
+  fetchRangeReport,
+  fetchTodaySummary,
+} from '../features/reports/reportsSlice';
+import {
+  selectRangeSummary,
+  selectTodaySummary,
+  selectTopProductsReport,
+} from '../features/reports/selectors';
 import { formatCurrency } from '../utils/format';
 import { getTodayRange, toISODate } from '../utils/date';
 
 const ReportsPage = () => {
+  const dispatch = useDispatch();
   const todayRange = useMemo(() => getTodayRange(), []);
+  const todaySummary = useSelector(selectTodaySummary);
+  const summary = useSelector(selectRangeSummary);
+  const topProducts = useSelector(selectTopProductsReport);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
 
-  const { data: todaySummary } = useQuery({
-    queryKey: ['reports', 'today'],
-    queryFn: () =>
-      apiFetch(
-        `/reports/summary?from=${toISODate(todayRange.start)}&to=${toISODate(todayRange.end)}`,
-      ),
-  });
+  useEffect(() => {
+    dispatch(
+      fetchTodaySummary({
+        from: toISODate(todayRange.start),
+        to: toISODate(todayRange.end),
+      }),
+    )
+      .unwrap()
+      .catch((error) => toast.error(error.message));
+  }, [dispatch, todayRange]);
 
-  const { data: rangeSummary } = useQuery({
-    queryKey: ['reports', 'range', from, to],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (from) params.append('from', from);
-      if (to) params.append('to', to);
-      return apiFetch(`/reports/summary?${params.toString()}`);
-    },
-  });
-
-  const { data: topProductsData } = useQuery({
-    queryKey: ['reports', 'top', from, to],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (from) params.append('from', from);
-      if (to) params.append('to', to);
-      return apiFetch(`/reports/top-products?${params.toString()}`);
-    },
-  });
-
-  const summary = rangeSummary?.data || {};
-  const topProducts = topProductsData?.data || [];
+  useEffect(() => {
+    dispatch(fetchRangeReport({ from, to }))
+      .unwrap()
+      .catch((error) => toast.error(error.message));
+  }, [dispatch, from, to]);
 
   const columns = [
     { key: 'name', label: 'Product' },
@@ -56,9 +55,9 @@ const ReportsPage = () => {
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-600">Today</h3>
-            <p className="text-sm text-slate-500">Sales: {todaySummary?.data?.salesCount || 0}</p>
+            <p className="text-sm text-slate-500">Sales: {todaySummary.salesCount || 0}</p>
             <p className="text-sm text-slate-500">
-              Net: {formatCurrency(todaySummary?.data?.netTotal || 0)}
+              Net: {formatCurrency(todaySummary.netTotal || 0)}
             </p>
           </div>
           <div className="rounded-lg border border-slate-200 p-4">

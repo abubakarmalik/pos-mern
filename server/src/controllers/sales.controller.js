@@ -33,18 +33,41 @@ const createSale = async (req, res, next) => {
 
     for (const item of items) {
       const product = productMap.get(item.productId);
-      if (!product) throw Object.assign(new Error('Product not found'), { status: 404 });
+      if (!product)
+        throw Object.assign(new Error('Product not found'), {
+          status: 404,
+          errorCode: 'PRODUCT_NOT_FOUND',
+          details: { productId: item.productId },
+        });
       if (!product.isActive)
-        throw Object.assign(new Error('Product is inactive'), { status: 400 });
+        throw Object.assign(new Error('Product is inactive'), {
+          status: 400,
+          errorCode: 'PRODUCT_INACTIVE',
+          details: { productId: item.productId },
+        });
 
       const linePrice = product.salePrice * item.qty;
       if (item.lineDiscount > linePrice)
         throw Object.assign(new Error('Line discount exceeds line total'), {
           status: 400,
+          errorCode: 'LINE_DISCOUNT_EXCEEDS_TOTAL',
+          details: {
+            productId: item.productId,
+            lineDiscount: item.lineDiscount,
+            lineTotal: linePrice,
+          },
         });
 
       if (!allowNegativeStock && product.stockOnHand < item.qty)
-        throw Object.assign(new Error('Insufficient stock'), { status: 400 });
+        throw Object.assign(new Error('Insufficient stock'), {
+          status: 400,
+          errorCode: 'INSUFFICIENT_STOCK',
+          details: {
+            productId: item.productId,
+            stockOnHand: product.stockOnHand,
+            requestedQty: item.qty,
+          },
+        });
 
       const lineSubtotal = linePrice - item.lineDiscount;
       const tax = Math.round(
@@ -94,10 +117,16 @@ const createSale = async (req, res, next) => {
     let changeDue = null;
     if (paymentMethod === 'CASH') {
       if (cashReceived == null)
-        throw Object.assign(new Error('Cash received required'), { status: 400 });
+        throw Object.assign(new Error('Cash received is required'), {
+          status: 400,
+          errorCode: 'CASH_RECEIVED_REQUIRED',
+          details: null,
+        });
       if (cashReceived < total)
         throw Object.assign(new Error('Cash received is less than total'), {
           status: 400,
+          errorCode: 'INSUFFICIENT_CASH_RECEIVED',
+          details: { cashReceived, total },
         });
       changeDue = cashReceived - total;
     }
@@ -134,7 +163,7 @@ const createSale = async (req, res, next) => {
     await session.commitTransaction();
     session.endSession();
 
-    return sendSuccess(res, sale[0]);
+    return sendSuccess(res, sale[0], 'Sale completed', 201);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -153,7 +182,7 @@ const listSales = async (req, res, next) => {
     }
     if (cashierId) query.cashierId = cashierId;
     const sales = await Sale.find(query).sort({ createdAt: -1 });
-    return sendSuccess(res, sales);
+    return sendSuccess(res, sales, 'Sales fetched');
   } catch (error) {
     return next(error);
   }
@@ -165,8 +194,12 @@ const getSale = async (req, res, next) => {
       'cashierId',
       'name email role',
     );
-    if (!sale) return sendError(res, 404, 'Sale not found');
-    return sendSuccess(res, sale);
+    if (!sale)
+      return sendError(res, 404, 'Sale not found', {
+        code: 'SALE_NOT_FOUND',
+        details: { id: req.params.id },
+      });
+    return sendSuccess(res, sale, 'Sale fetched');
   } catch (error) {
     return next(error);
   }

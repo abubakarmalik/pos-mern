@@ -6,7 +6,11 @@ const createUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.validated.body;
     const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) return sendError(res, 400, 'Email already in use');
+    if (existing)
+      return sendError(res, 409, 'Email already in use', {
+        code: 'DUPLICATE_EMAIL',
+        details: { email: email.toLowerCase() },
+      });
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({
@@ -15,13 +19,18 @@ const createUser = async (req, res, next) => {
       passwordHash,
       role,
     });
-    return sendSuccess(res, {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isActive: user.isActive,
-    });
+    return sendSuccess(
+      res,
+      {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+      },
+      'User created',
+      201,
+    );
   } catch (error) {
     return next(error);
   }
@@ -40,6 +49,7 @@ const listUsers = async (_req, res, next) => {
         isActive: user.isActive,
         createdAt: user.createdAt,
       })),
+      'Users fetched',
     );
   } catch (error) {
     return next(error);
@@ -50,13 +60,21 @@ const toggleUser = async (req, res, next) => {
   try {
     const { id } = req.validated.params;
     const user = await User.findById(id);
-    if (!user) return sendError(res, 404, 'User not found');
+    if (!user)
+      return sendError(res, 404, 'User not found', {
+        code: 'USER_NOT_FOUND',
+        details: { id },
+      });
     user.isActive = !user.isActive;
     await user.save();
-    return sendSuccess(res, {
-      id: user._id.toString(),
-      isActive: user.isActive,
-    });
+    return sendSuccess(
+      res,
+      {
+        id: user._id.toString(),
+        isActive: user.isActive,
+      },
+      user.isActive ? 'User enabled' : 'User disabled',
+    );
   } catch (error) {
     return next(error);
   }

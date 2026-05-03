@@ -1,40 +1,48 @@
 import { useParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { apiFetch } from '../api/client';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import { formatCurrency } from '../utils/format';
-import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSelector';
+import { createRefund, fetchSale } from '../features/sales/salesSlice';
+import {
+  selectCurrentSale,
+  selectCurrentSaleLoading,
+  selectSaleRefunding,
+} from '../features/sales/selectors';
 
 const SaleDetailPage = () => {
   const { id } = useParams();
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
-  const queryClient = useQueryClient();
+  const sale = useSelector(selectCurrentSale);
+  const isLoading = useSelector(selectCurrentSaleLoading);
+  const isRefunding = useSelector(selectSaleRefunding);
   const [refundOpen, setRefundOpen] = useState(false);
   const [reason, setReason] = useState('');
 
-  const { data: saleData, isLoading } = useQuery({
-    queryKey: ['sales', id],
-    queryFn: () => apiFetch(`/sales/${id}`),
-  });
+  useEffect(() => {
+    dispatch(fetchSale(id))
+      .unwrap()
+      .catch((error) => toast.error(error.message));
+  }, [dispatch, id]);
 
-  const refundMutation = useMutation({
-    mutationFn: () => apiFetch('/refunds', { method: 'POST', body: { saleId: id, reason } }),
-    onSuccess: () => {
-      toast.success('Refund processed');
-      setRefundOpen(false);
-      setReason('');
-      queryClient.invalidateQueries({ queryKey: ['sales', id] });
-    },
-    onError: (error) => toast.error(error.message),
-  });
+  const handleRefund = () => {
+    dispatch(createRefund({ saleId: id, reason }))
+      .unwrap()
+      .then(() => {
+        toast.success('Refund processed');
+        setRefundOpen(false);
+        setReason('');
+        dispatch(fetchSale(id));
+      })
+      .catch((error) => toast.error(error.message));
+  };
 
   if (isLoading) return <div>Loading...</div>;
-  const sale = saleData?.data;
   if (!sale) return <div>Sale not found.</div>;
 
   return (
@@ -96,10 +104,10 @@ const SaleDetailPage = () => {
           <Button
             variant="danger"
             className="w-full"
-            onClick={() => refundMutation.mutate()}
-            disabled={refundMutation.isLoading}
+            onClick={handleRefund}
+            disabled={isRefunding}
           >
-            {refundMutation.isLoading ? 'Processing...' : 'Confirm Refund'}
+            {isRefunding ? 'Processing...' : 'Confirm Refund'}
           </Button>
         </div>
       </Modal>

@@ -1,28 +1,39 @@
-import { getToken } from '../utils/authStorage';
+import axios from 'axios';
+import { clearAuthStorage, getToken } from '../utils/authStorage';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-export const apiFetch = async (path, options = {}) => {
-  const token = getToken();
-  const headers = {
+const apiClient = axios.create({
+  baseURL,
+  headers: {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
-  };
+  },
+});
 
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-
-  const data = await response.json();
-  if (!response.ok || data.success === false) {
-    const error = new Error(data.message || 'Request failed');
-    error.errors = data.errors;
-    throw error;
+apiClient.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
-  return data;
-};
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      clearAuthStorage();
+    }
+
+    const apiError = new Error(
+      error.response?.data?.message || error.message || 'Request failed',
+    );
+    apiError.code = error.response?.data?.error?.code;
+    apiError.details = error.response?.data?.error?.details;
+    apiError.status = error.response?.status;
+    apiError.response = error.response;
+    return Promise.reject(apiError);
+  },
+);
+
+export default apiClient;

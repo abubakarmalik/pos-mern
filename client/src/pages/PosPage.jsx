@@ -1,48 +1,53 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch } from '../api/client';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import Select from '../components/ui/Select';
-import Table from '../components/ui/Table';
-import { formatCurrency } from '../utils/format';
+import { useDispatch, useSelector } from 'react-redux';
+import CartPanel from '../components/pos/CartPanel';
+import ProductPicker from '../components/pos/ProductPicker';
+import { fetchProducts } from '../features/products/productsSlice';
+import {
+  selectProducts,
+  selectProductsLoading,
+} from '../features/products/selectors';
+import { clearCreatedSale, createSale } from '../features/sales/salesSlice';
+import {
+  selectLastCreatedSale,
+  selectSaleCreating,
+} from '../features/sales/selectors';
+import { fetchSettings } from '../features/settings/settingsSlice';
+import { selectCurrencySymbol } from '../features/settings/selectors';
 
 const PosPage = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
   const [cartDiscount, setCartDiscount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [cashReceived, setCashReceived] = useState('');
+  const products = useSelector(selectProducts);
+  const isLoadingProducts = useSelector(selectProductsLoading);
+  const isCreatingSale = useSelector(selectSaleCreating);
+  const lastCreatedSale = useSelector(selectLastCreatedSale);
+  const currencySymbol = useSelector(selectCurrencySymbol);
 
-  const { data: settingsData } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => apiFetch('/settings'),
-  });
+  useEffect(() => {
+    dispatch(fetchSettings());
+  }, [dispatch]);
 
-  const currencySymbol = settingsData?.data?.currencySymbol || 'PKR';
+  useEffect(() => {
+    dispatch(fetchProducts(search));
+  }, [dispatch, search]);
 
-  const { data: productsData, isLoading } = useQuery({
-    queryKey: ['products', search],
-    queryFn: () => apiFetch(`/products?search=${encodeURIComponent(search)}`),
-  });
+  useEffect(() => {
+    if (!lastCreatedSale?._id) return;
 
-  const createSaleMutation = useMutation({
-    mutationFn: (payload) =>
-      apiFetch('/sales', { method: 'POST', body: payload }),
-    onSuccess: (response) => {
-      toast.success('Sale completed');
-      setCart([]);
-      setCartDiscount('0');
-      setCashReceived('');
-      navigate(`/invoice/${response.data._id}`);
-    },
-    onError: (error) => toast.error(error.message),
-  });
-
-  const products = productsData?.data || [];
+    setCart([]);
+    setCartDiscount('0');
+    setCashReceived('');
+    navigate(`/invoice/${lastCreatedSale._id}`);
+    dispatch(clearCreatedSale());
+  }, [dispatch, lastCreatedSale, navigate]);
 
   const addToCart = (product) => {
     setCart((prev) => {
@@ -123,177 +128,44 @@ const PosPage = () => {
       cashReceived: paymentMethod === 'CASH' ? Number(cashReceived) || 0 : null,
     };
 
-    createSaleMutation.mutate(payload);
+    dispatch(createSale(payload))
+      .unwrap()
+      .then(() => {
+        toast.success('Sale completed');
+      })
+      .catch((error) => toast.error(error.message));
   };
-
-  const cartColumns = [
-    {
-      key: 'name',
-      label: 'Product',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-slate-800">{row.product.name}</p>
-          <p className="text-xs text-slate-500">{row.product.sku}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'qty',
-      label: 'Qty',
-      render: (row) => (
-        <Input
-          type="number"
-          min="0"
-          value={row.qty}
-          onChange={(event) =>
-            updateQty(row.product._id, Number(event.target.value))
-          }
-          className="w-20"
-        />
-      ),
-    },
-    {
-      key: 'price',
-      label: 'Price',
-      render: (row) =>
-        formatCurrency(row.product.salePrice, currencySymbol),
-    },
-    {
-      key: 'discount',
-      label: 'Line Discount',
-      render: (row) => (
-        <Input
-          type="number"
-          min="0"
-          step="0.01"
-          value={row.lineDiscount}
-          onChange={(event) =>
-            updateLineDiscount(row.product._id, event.target.value)
-          }
-          className="w-28"
-        />
-      ),
-    },
-    {
-      key: 'total',
-      label: 'Line Total',
-      render: (row) => {
-        const lineTotal =
-          row.product.salePrice * row.qty - row.lineDiscount;
-        return formatCurrency(lineTotal, currencySymbol);
-      },
-    },
-  ];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="space-y-4">
-        <div className="rounded-xl bg-white p-4 shadow">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-800">Products</h2>
-          </div>
-          <div className="mt-4">
-            <Input
-              placeholder="Search products"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {isLoading && <p className="text-sm text-slate-500">Loading...</p>}
-            {!isLoading && products.length === 0 && (
-              <p className="text-sm text-slate-500">No products found.</p>
-            )}
-            {products.map((product) => (
-              <button
-                key={product._id}
-                type="button"
-                onClick={() => addToCart(product)}
-                className="rounded-lg border border-slate-200 p-3 text-left hover:border-blue-500"
-              >
-                <p className="font-medium text-slate-800">{product.name}</p>
-                <p className="text-xs text-slate-500">
-                  {product.sku || 'No SKU'}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-blue-600">
-                  {formatCurrency(product.salePrice, currencySymbol)}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
+        <ProductPicker
+          currencySymbol={currencySymbol}
+          isLoading={isLoadingProducts}
+          onAddToCart={addToCart}
+          onSearchChange={setSearch}
+          products={products}
+          search={search}
+        />
       </div>
 
       <div className="space-y-4">
-        <div className="rounded-xl bg-white p-4 shadow">
-          <h2 className="text-lg font-semibold text-slate-800">Cart</h2>
-          <div className="mt-4">
-            <Table columns={cartColumns} data={cart} />
-          </div>
-          <div className="mt-4 space-y-2">
-            <Input
-              label="Cart Discount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={cartDiscount}
-              onChange={(event) => setCartDiscount(event.target.value)}
-            />
-            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatCurrency(totals.subtotal, currencySymbol)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax</span>
-                <span>{formatCurrency(totals.tax, currencySymbol)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Discounts</span>
-                <span>
-                  {formatCurrency(
-                    totals.lineDiscountTotal + totals.cartDiscountAmount,
-                    currencySymbol,
-                  )}
-                </span>
-              </div>
-              <div className="mt-2 flex justify-between text-base font-semibold text-slate-800">
-                <span>Total</span>
-                <span>{formatCurrency(totals.total, currencySymbol)}</span>
-              </div>
-            </div>
-            <Select
-              label="Payment Method"
-              value={paymentMethod}
-              onChange={(event) => setPaymentMethod(event.target.value)}
-            >
-              <option value="CASH">Cash</option>
-              <option value="CARD">Card</option>
-            </Select>
-            {paymentMethod === 'CASH' && (
-              <div className="space-y-2">
-                <Input
-                  label="Cash Received"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={cashReceived}
-                  onChange={(event) => setCashReceived(event.target.value)}
-                />
-                <p className="text-sm text-slate-600">
-                  Change Due: {formatCurrency(changeDue, currencySymbol)}
-                </p>
-              </div>
-            )}
-            <Button
-              className="w-full"
-              onClick={handleCheckout}
-              disabled={createSaleMutation.isLoading}
-            >
-              {createSaleMutation.isLoading ? 'Processing...' : 'Complete Sale'}
-            </Button>
-          </div>
-        </div>
+        <CartPanel
+          cart={cart}
+          cartDiscount={cartDiscount}
+          cashReceived={cashReceived}
+          changeDue={changeDue}
+          currencySymbol={currencySymbol}
+          isCreatingSale={isCreatingSale}
+          onCartDiscountChange={setCartDiscount}
+          onCashReceivedChange={setCashReceived}
+          onCheckout={handleCheckout}
+          onLineDiscountChange={updateLineDiscount}
+          onPaymentMethodChange={setPaymentMethod}
+          onQtyChange={updateQty}
+          paymentMethod={paymentMethod}
+          totals={totals}
+        />
       </div>
     </div>
   );

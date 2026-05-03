@@ -2,19 +2,41 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import Table from '../../components/ui/Table';
-import Badge from '../../components/ui/Badge';
+import Table from '../ui/Table';
+import Badge from '../ui/Badge';
 import { formatCurrency } from '../../utils/format';
-import { fetchProducts, toggleProduct } from './productsSlice';
+import { selectUser } from '../../features/auth/authSelector';
+import {
+  selectProducts,
+  selectProductsError,
+  selectProductsLoading,
+  selectProductsMessage,
+} from '../../features/products/selectors';
+import {
+  clearProductsMessage,
+  fetchProducts,
+  toggleProduct,
+} from '../../features/products/productsSlice';
 
 const ProductsTable = ({ search }) => {
   const dispatch = useDispatch();
-  const { items, isLoading, error, message } = useSelector((state) => state.products);
-  const user = useSelector((state) => state.auth.user);
+  const items = useSelector(selectProducts);
+  const isLoading = useSelector(selectProductsLoading);
+  const error = useSelector(selectProductsError);
+  const message = useSelector(selectProductsMessage);
+  const user = useSelector(selectUser);
 
   useEffect(() => { dispatch(fetchProducts(search)); }, [dispatch, search]);
-  useEffect(() => { if (error) toast.error(error); }, [error]);
-  useEffect(() => { if (message) toast.success(message); }, [message]);
+  useEffect(() => {
+    if (!error) return;
+    toast.error(error);
+    dispatch(clearProductsMessage());
+  }, [dispatch, error]);
+  useEffect(() => {
+    if (!message) return;
+    toast.success(message);
+    dispatch(clearProductsMessage());
+  }, [dispatch, message]);
 
   const columns = [
     { key: 'name', label: 'Product', render: (row) => <div><p className="font-medium text-slate-800">{row.name}</p><p className="text-xs text-slate-500">{row.sku || 'No SKU'}</p></div> },

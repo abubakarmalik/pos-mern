@@ -16,7 +16,10 @@ const validateRequest = (schema) => (req, res, next) => {
         path: issue.path.join('.'),
         message: issue.message,
       }));
-      return sendError(res, 400, 'Validation failed', details);
+      return sendError(res, 400, 'Validation failed', {
+        code: 'VALIDATION_ERROR',
+        details,
+      });
     }
     return next(error);
   }

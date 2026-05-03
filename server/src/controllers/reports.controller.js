@@ -30,15 +30,19 @@ const getSummary = async (req, res, next) => {
       },
     ]);
 
-    return sendSuccess(res, {
-      salesCount: summary?.salesCount || 0,
-      grossSubtotal: summary?.grossSubtotal || 0,
-      lineDiscount: summary?.lineDiscount || 0,
-      cartDiscount: summary?.cartDiscount || 0,
-      discountTotal: summary?.discountTotal || 0,
-      taxTotal: summary?.taxTotal || 0,
-      netTotal: summary?.netTotal || 0,
-    });
+    return sendSuccess(
+      res,
+      {
+        salesCount: summary?.salesCount || 0,
+        grossSubtotal: summary?.grossSubtotal || 0,
+        lineDiscount: summary?.lineDiscount || 0,
+        cartDiscount: summary?.cartDiscount || 0,
+        discountTotal: summary?.discountTotal || 0,
+        taxTotal: summary?.taxTotal || 0,
+        netTotal: summary?.netTotal || 0,
+      },
+      'Sales summary fetched',
+    );
   } catch (error) {
     return next(error);
   }
@@ -66,7 +70,7 @@ const getTopProducts = async (req, res, next) => {
       { $limit: 10 },
     ]);
 
-    return sendSuccess(res, topProducts);
+    return sendSuccess(res, topProducts, 'Top products report fetched');
   } catch (error) {
     return next(error);
   }
