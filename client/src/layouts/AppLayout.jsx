@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useState } from 'react';
-import { useAuth } from '../auth/AuthProvider';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../features/auth/authSlice';
+import { selectUser } from '../features/auth/authSelector';
 
 const navItems = [
   { to: '/pos', label: 'POS' },
@@ -12,7 +14,8 @@ const navItems = [
 ];
 
 const AppLayout = () => {
-  const { user, logout } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
   const [open, setOpen] = useState(false);
 
   const filteredItems = navItems.filter(
@@ -72,7 +75,7 @@ const AppLayout = () => {
           </div>
           <button
             type="button"
-            onClick={logout}
+            onClick={() => dispatch(logout())}
             className="text-sm font-medium text-slate-600 hover:text-slate-900"
           >
             Logout

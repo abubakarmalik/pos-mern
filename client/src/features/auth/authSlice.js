@@ -1,92 +1,89 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { login as loginApi, logout as logoutApi } from './api';
-import { toast } from 'react-hot-toast';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiFetch } from '../../api/client';
+import {
+  clearAuthStorage,
+  getAuthStorage,
+  setAuthStorage,
+} from '../../auth/authStorage';
+
+const authStorage = getAuthStorage();
 
 const initialState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
+  user: authStorage?.user || null,
+  token: authStorage?.token || null,
+  isAuthenticated: Boolean(authStorage?.token),
+  isLoading: false,
 };
 
-// Async thunks
-export const loginUser = createAsyncThunk(
-  'auth/loginUser',
-  async (credentials, { rejectWithValue }) => {
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const data = await loginApi(credentials);
-      return data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Login failed');
+      const { auth } = getState();
+      if (!auth?.token) return null;
+      const response = await apiFetch('/auth/me');
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch user');
     }
   },
 );
 
-export const logoutUser = createAsyncThunk('auth/logoutUser', async (token) => {
-  try {
-    await logoutApi(token);
-    return true;
-  } catch (err) {
-    return false;
-  }
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const response = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Login failed');
+    }
+  },
+);
+
+export const logout = createAsyncThunk('auth/logout', async () => {
+  clearAuthStorage();
+  return true;
 });
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {
-    setCredentials: (state, action) => {
-      const { user, token } = action.payload;
-      state.user = user;
-      state.token = token;
-      state.isAuthenticated = true;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.isLoading = true;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        // API returns { success, message, data: { user, token }, error }
-        const payload = action.payload || {};
-        const data = payload.data || {};
-        state.user = data.user || null;
-        state.token = data.token || null;
-        state.isAuthenticated = Boolean(data.token);
-        toast.success(payload.message || 'Login successful!');
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload || state.user;
       })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        // action.payload is likely a string message from rejectWithValue
-        let message = action.payload || action.error?.message || 'Login failed';
-        // If backend returned structured error, try to read details
-        if (action.payload && typeof action.payload === 'object') {
-          message =
-            action.payload.message ||
-            action.payload.error?.details ||
-            JSON.stringify(action.payload);
-        }
-        state.error = message;
-        toast.error(message);
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.isLoading = false;
       })
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isLoading = false;
+        setAuthStorage(action.payload);
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = Boolean(action.payload.token);
+      })
+      .addCase(login.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        toast.success('Logged out!');
       });
   },
 });
 
-export const { setCredentials } = authSlice.actions;
-
 export default authSlice.reducer;
-
-// Selectors
-export const selectCurrentUser = (state) => state.auth.user;
-export const selectCurrentToken = (state) => state.auth.token;
-export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;

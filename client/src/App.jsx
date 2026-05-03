@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './auth/AuthProvider';
+import { useDispatch, useSelector } from 'react-redux';
 import AuthLayout from './layouts/AuthLayout';
 import AppLayout from './layouts/AppLayout';
 import LoginPage from './pages/LoginPage';
@@ -12,22 +13,38 @@ import ProductFormPage from './pages/ProductFormPage';
 import InventoryPage from './pages/InventoryPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
+import { fetchCurrentUser } from './features/auth/authSlice';
+import {
+  selectAuthLoading,
+  selectIsAuthenticated,
+  selectUser,
+} from './features/auth/authSelector';
 
 const RequireAuth = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isLoading = useSelector(selectAuthLoading);
   if (isLoading) return <div className="p-6">Loading...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
 
 const RequireRole = ({ roles, children }) => {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   if (!user) return null;
   if (!roles.includes(user.role)) return <Navigate to="/pos" replace />;
   return children;
 };
 
 function App() {
+  const dispatch = useDispatch();
+  const token = useSelector((state) => state.auth.token);
+
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch, token]);
+
   return (
     <Routes>
       <Route element={<AuthLayout />}>
