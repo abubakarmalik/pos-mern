@@ -1,47 +1,31 @@
-const bcrypt = require('bcrypt');
-const { prisma } = require('../../config/prisma');
 const { sendSuccess, sendError } = require('../utils/response');
-const { mapUser } = require('../utils/userMapper');
+const usersService = require('../services/users.service');
+
+const handleServiceError = (res, error) =>
+  sendError(res, error.status, error.message, {
+    code: error.errorCode,
+    details: error.details,
+  });
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, username, password, role } = req.validated.body;
-    const normalizedUsername = username.trim().toLowerCase();
-    const existing = await prisma.users.findUnique({
-      where: { username: normalizedUsername },
-    });
-    if (existing)
-      return sendError(res, 409, 'Username already in use', {
-        code: 'DUPLICATE_USERNAME',
-        details: { username: normalizedUsername },
-      });
-
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await prisma.users.create({
-      data: {
-        name,
-        username: normalizedUsername,
-        password_hash: passwordHash,
-        role,
-      },
-    });
-    return sendSuccess(res, mapUser(user), 'User created', 201);
+    const user = await usersService.createUser(req.validated.body);
+    return sendSuccess(res, user, 'User created', 201);
   } catch (error) {
     if (error.code === 'P2002')
       return sendError(res, 409, 'Username already in use', {
         code: 'DUPLICATE_USERNAME',
         details: { fields: error.meta?.target || ['username'] },
       });
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
 
 const listUsers = async (_req, res, next) => {
   try {
-    const users = await prisma.users.findMany({
-      orderBy: { created_at: 'desc' },
-    });
-    return sendSuccess(res, users.map(mapUser), 'Users fetched');
+    const users = await usersService.listUsers();
+    return sendSuccess(res, users, 'Users fetched');
   } catch (error) {
     return next(error);
   }
@@ -50,27 +34,14 @@ const listUsers = async (_req, res, next) => {
 const toggleUser = async (req, res, next) => {
   try {
     const { id } = req.validated.params;
-    const user = await prisma.users.findUnique({
-      where: { id },
-    });
-    if (!user)
-      return sendError(res, 404, 'User not found', {
-        code: 'USER_NOT_FOUND',
-        details: { id },
-      });
-    const updatedUser = await prisma.users.update({
-      where: { id },
-      data: { is_active: !user.is_active },
-    });
+    const user = await usersService.toggleUser(id);
     return sendSuccess(
       res,
-      {
-        id: updatedUser.id,
-        isActive: updatedUser.is_active,
-      },
-      updatedUser.is_active ? 'User enabled' : 'User disabled',
+      user,
+      user.isActive ? 'User enabled' : 'User disabled',
     );
   } catch (error) {
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };

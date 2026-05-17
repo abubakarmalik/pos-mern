@@ -1,8 +1,10 @@
-const jwt = require('jsonwebtoken');
-const env = require('../../config/env');
-const { prisma } = require('../../config/prisma');
 const { sendError } = require('../utils/response');
 const { mapUser } = require('../utils/userMapper');
+const {
+  findActiveUserById,
+  signToken,
+  verifyToken,
+} = require('../services/auth.service');
 
 const extractToken = (req) => {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -11,15 +13,6 @@ const extractToken = (req) => {
   if (!/^Bearer$/i.test(scheme)) return null;
   return token;
 };
-
-const getUserId = (user) => user.id || user._id?.toString();
-
-const signToken = (user) =>
-  jwt.sign(
-    { id: getUserId(user), role: user.role },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN || '7d' },
-  );
 
 const requireAuth = async (req, res, next) => {
   try {
@@ -30,11 +23,9 @@ const requireAuth = async (req, res, next) => {
         details: null,
       });
 
-    const payload = jwt.verify(token, env.JWT_SECRET);
-    const user = await prisma.users.findUnique({
-      where: { id: payload.id },
-    });
-    if (!user || !user.is_active)
+    const payload = verifyToken(token);
+    const user = await findActiveUserById(payload.id);
+    if (!user)
       return sendError(res, 401, 'User is not authorized', {
         code: 'UNAUTHORIZED',
         details: null,
