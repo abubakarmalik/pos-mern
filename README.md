@@ -125,7 +125,7 @@ VITE_API_URL="http://localhost:8080/api"
 
 ```bash
 git clone <repository-url>
-cd pos-mern
+cd pos-pern
 ```
 
 ### 2. Install dependencies
