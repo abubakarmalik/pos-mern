@@ -1,48 +1,10 @@
-const Sale = require('../models/sale.model');
+const reportsService = require('../services/reports.service');
 const { sendSuccess } = require('../utils/response');
-
-const parseDateRange = (from, to) => {
-  const range = {};
-  if (from) range.$gte = new Date(from);
-  if (to) range.$lte = new Date(to);
-  return range;
-};
 
 const getSummary = async (req, res, next) => {
   try {
-    const { from, to } = req.validated.query;
-    const match = { status: 'COMPLETED' };
-    if (from || to) match.createdAt = parseDateRange(from, to);
-
-    const [summary] = await Sale.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          salesCount: { $sum: 1 },
-          grossSubtotal: { $sum: '$subtotal' },
-          lineDiscount: { $sum: '$lineDiscountTotal' },
-          cartDiscount: { $sum: '$cartDiscount' },
-          discountTotal: { $sum: '$discountTotal' },
-          taxTotal: { $sum: '$taxTotal' },
-          netTotal: { $sum: '$total' },
-        },
-      },
-    ]);
-
-    return sendSuccess(
-      res,
-      {
-        salesCount: summary?.salesCount || 0,
-        grossSubtotal: summary?.grossSubtotal || 0,
-        lineDiscount: summary?.lineDiscount || 0,
-        cartDiscount: summary?.cartDiscount || 0,
-        discountTotal: summary?.discountTotal || 0,
-        taxTotal: summary?.taxTotal || 0,
-        netTotal: summary?.netTotal || 0,
-      },
-      'Sales summary fetched',
-    );
+    const summary = await reportsService.getSummary(req.validated.query);
+    return sendSuccess(res, summary, 'Sales summary fetched');
   } catch (error) {
     return next(error);
   }
@@ -50,30 +12,75 @@ const getSummary = async (req, res, next) => {
 
 const getTopProducts = async (req, res, next) => {
   try {
-    const { from, to } = req.validated.query;
-    const match = { status: 'COMPLETED' };
-    if (from || to) match.createdAt = parseDateRange(from, to);
-
-    const topProducts = await Sale.aggregate([
-      { $match: match },
-      { $unwind: '$items' },
-      {
-        $group: {
-          _id: '$items.productId',
-          name: { $first: '$items.nameSnapshot' },
-          sku: { $first: '$items.skuSnapshot' },
-          qtySold: { $sum: '$items.qty' },
-          revenue: { $sum: '$items.lineTotal' },
-        },
-      },
-      { $sort: { qtySold: -1 } },
-      { $limit: 10 },
-    ]);
-
+    const topProducts = await reportsService.getTopProducts(req.validated.query);
     return sendSuccess(res, topProducts, 'Top products report fetched');
   } catch (error) {
     return next(error);
   }
 };
 
-module.exports = { getSummary, getTopProducts };
+const getDashboard = async (req, res, next) => {
+  try {
+    const dashboard = await reportsService.getDashboard(req.validated.query);
+    return sendSuccess(res, dashboard, 'Dashboard report fetched');
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getSalesByDate = async (req, res, next) => {
+  try {
+    const salesByDate = await reportsService.getSalesByDate(req.validated.query);
+    return sendSuccess(res, salesByDate, 'Sales by date report fetched');
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getSalesByPaymentMethod = async (req, res, next) => {
+  try {
+    const salesByPaymentMethod =
+      await reportsService.getSalesByPaymentMethod(req.validated.query);
+    return sendSuccess(
+      res,
+      salesByPaymentMethod,
+      'Sales by payment method report fetched',
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getCashierPerformance = async (req, res, next) => {
+  try {
+    const cashierPerformance =
+      await reportsService.getCashierPerformance(req.validated.query);
+    return sendSuccess(res, cashierPerformance, 'Cashier performance report fetched');
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getInventoryMovementSummary = async (req, res, next) => {
+  try {
+    const inventoryMovement =
+      await reportsService.getInventoryMovementSummary(req.validated.query);
+    return sendSuccess(
+      res,
+      inventoryMovement,
+      'Inventory movement summary fetched',
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  getCashierPerformance,
+  getDashboard,
+  getInventoryMovementSummary,
+  getSalesByDate,
+  getSalesByPaymentMethod,
+  getSummary,
+  getTopProducts,
+};

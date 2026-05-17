@@ -1,17 +1,21 @@
 import apiClient from '../../api/client';
 
-export const fetchSummaryReportApi = ({ from, to } = {}) =>
-  apiClient.get('/reports/summary', {
-    params: {
-      ...(from ? { from } : {}),
-      ...(to ? { to } : {}),
-    },
-  });
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value != null),
+  );
 
-export const fetchTopProductsReportApi = ({ from, to } = {}) =>
-  apiClient.get('/reports/top-products', {
-    params: {
-      ...(from ? { from } : {}),
-      ...(to ? { to } : {}),
-    },
-  });
+export const fetchSummaryReportApi = (params = {}) =>
+  apiClient.get('/reports/summary', { params: cleanParams(params) });
+
+export const fetchTopProductsReportApi = (params = {}) =>
+  apiClient.get('/reports/top-products', { params: cleanParams(params) });
+
+export const fetchDashboardReportApi = (params = {}) =>
+  apiClient.get('/reports/dashboard', { params: cleanParams(params) });
+
+export const fetchCashierPerformanceReportApi = (params = {}) =>
+  apiClient.get('/reports/cashier-performance', { params: cleanParams(params) });
+
+export const fetchInventoryMovementReportApi = (params = {}) =>
+  apiClient.get('/reports/inventory-movement', { params: cleanParams(params) });

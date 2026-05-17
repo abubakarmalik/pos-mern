@@ -1,10 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { fetchSummaryReportApi, fetchTopProductsReportApi } from './api';
+import {
+  fetchCashierPerformanceReportApi,
+  fetchDashboardReportApi,
+  fetchInventoryMovementReportApi,
+  fetchSummaryReportApi,
+} from './api';
 
 const initialState = {
   todaySummary: {},
   rangeSummary: {},
   topProducts: [],
+  lowStockProducts: [],
+  salesByDate: [],
+  salesByPaymentMethod: [],
+  cashierPerformance: [],
+  inventoryMovement: [],
   isLoadingToday: false,
   isLoadingRange: false,
   error: null,
@@ -28,14 +38,26 @@ export const fetchRangeReport = createAsyncThunk(
   'reports/fetchRangeReport',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const [summaryResponse, topProductsResponse] = await Promise.all([
-        fetchSummaryReportApi(params),
-        fetchTopProductsReportApi(params),
+      const [
+        dashboardResponse,
+        cashierPerformanceResponse,
+        inventoryMovementResponse,
+      ] = await Promise.all([
+        fetchDashboardReportApi(params),
+        fetchCashierPerformanceReportApi(params),
+        fetchInventoryMovementReportApi(params),
       ]);
 
+      const dashboard = dashboardResponse.data?.data || {};
+
       return {
-        summary: summaryResponse.data?.data || {},
-        topProducts: topProductsResponse.data?.data || [],
+        summary: dashboard.summary || {},
+        topProducts: dashboard.topProducts || [],
+        lowStockProducts: dashboard.lowStockProducts || [],
+        salesByDate: dashboard.salesByDate || [],
+        salesByPaymentMethod: dashboard.salesByPaymentMethod || [],
+        cashierPerformance: cashierPerformanceResponse.data?.data || [],
+        inventoryMovement: inventoryMovementResponse.data?.data || [],
       };
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
@@ -69,6 +91,11 @@ const reportsSlice = createSlice({
         state.isLoadingRange = false;
         state.rangeSummary = action.payload?.summary || {};
         state.topProducts = action.payload?.topProducts || [];
+        state.lowStockProducts = action.payload?.lowStockProducts || [];
+        state.salesByDate = action.payload?.salesByDate || [];
+        state.salesByPaymentMethod = action.payload?.salesByPaymentMethod || [];
+        state.cashierPerformance = action.payload?.cashierPerformance || [];
+        state.inventoryMovement = action.payload?.inventoryMovement || [];
       })
       .addCase(fetchRangeReport.rejected, (state, action) => {
         state.isLoadingRange = false;
