@@ -26,11 +26,29 @@ const navItems = [
   { to: '/pos', label: 'POS', section: 'Register', icon: FiShoppingCart },
   { to: '/sales', label: 'Sales', section: 'Register', icon: FiGrid },
   { to: '/products', label: 'Products', section: 'Catalog', icon: FiBox },
-  { to: '/categories', label: 'Categories', role: 'ADMIN', section: 'Catalog', icon: FiTag },
+  {
+    to: '/categories',
+    label: 'Categories',
+    role: 'ADMIN',
+    section: 'Catalog',
+    icon: FiTag,
+  },
   { to: '/inventory', label: 'Inventory', section: 'Catalog', icon: FiArchive },
   { to: '/reports', label: 'Reports', section: 'Insights', icon: FiBarChart2 },
-  { to: '/users', label: 'Users', role: 'ADMIN', section: 'Admin', icon: FiUsers },
-  { to: '/settings', label: 'Settings', role: 'ADMIN', section: 'Admin', icon: FiSettings },
+  {
+    to: '/users',
+    label: 'Users',
+    role: 'ADMIN',
+    section: 'Admin',
+    icon: FiUsers,
+  },
+  {
+    to: '/settings',
+    label: 'Settings',
+    role: 'ADMIN',
+    section: 'Admin',
+    icon: FiSettings,
+  },
 ];
 
 const AppLayout = () => {
@@ -82,9 +100,11 @@ const AppLayout = () => {
           open ? 'translate-x-0' : '-translate-x-full'
         } ${collapsed ? 'md:w-20' : 'w-72 md:w-72'}`}
       >
-        <div className={`flex items-center justify-between border-b border-white/10 px-4 py-5 ${collapsed ? 'md:justify-center' : ''}`}>
+        <div
+          className={`flex items-center justify-between border-b border-white/10 px-4 py-5 ${collapsed ? 'md:justify-center' : ''}`}
+        >
           <div className={`min-w-0 ${collapsed ? 'md:hidden' : ''}`}>
-            <h2 className="truncate text-lg font-semibold">POS Admin</h2>
+            <h2 className="truncate text-lg font-semibold">{user?.role}</h2>
             <p className="truncate text-xs text-slate-400">Retail operations</p>
           </div>
           {collapsed && (
@@ -100,10 +120,14 @@ const AppLayout = () => {
             <FiX />
           </button>
         </div>
-        <nav className={`flex-1 overflow-y-auto py-5 ${collapsed ? 'md:px-3' : 'px-4'}`}>
+        <nav
+          className={`flex-1 overflow-y-auto py-5 ${collapsed ? 'md:px-3' : 'px-4'}`}
+        >
           {Object.entries(groupedItems).map(([section, items]) => (
             <div key={section} className="mb-5 last:mb-0">
-              <p className={`mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-slate-500 ${collapsed ? 'md:sr-only' : ''}`}>
+              <p
+                className={`mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-slate-500 ${collapsed ? 'md:sr-only' : ''}`}
+              >
                 {section}
               </p>
               <div className="space-y-1">
@@ -169,7 +193,9 @@ const AppLayout = () => {
             </div>
             <div>
               <p className="text-xs text-slate-500">Signed in as</p>
-              <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
+              <p className="text-sm font-semibold text-slate-800">
+                {user?.name}
+              </p>
             </div>
           </div>
           <Button
