@@ -1,12 +1,12 @@
 import apiClient from '../../api/client';
 
-export const fetchSalesApi = ({ from, to } = {}) =>
-  apiClient.get('/sales', {
-    params: {
-      ...(from ? { from } : {}),
-      ...(to ? { to } : {}),
-    },
-  });
+const cleanParams = (params) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== ''),
+  );
+
+export const fetchSalesApi = (params = {}) =>
+  apiClient.get('/sales', { params: cleanParams(params) });
 
 export const fetchSaleApi = (id) => apiClient.get(`/sales/${id}`);
 

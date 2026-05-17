@@ -10,7 +10,7 @@ const SalesTable = ({ isLoading, sales }) => {
       label: 'Invoice',
       render: (row) => (
         <Link
-          to={`/sales/${row._id}`}
+          to={`/sales/${row.id}`}
           className="font-medium text-blue-600 hover:underline"
         >
           {row.invoiceNo}

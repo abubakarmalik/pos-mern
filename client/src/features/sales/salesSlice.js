@@ -3,6 +3,12 @@ import { createRefundApi, createSaleApi, fetchSaleApi, fetchSalesApi } from './a
 
 const initialState = {
   items: [],
+  pagination: {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  },
   currentItem: null,
   lastCreatedItem: null,
   isLoading: false,
@@ -87,7 +93,9 @@ const salesSlice = createSlice({
       })
       .addCase(fetchSales.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload?.data || [];
+        state.items = action.payload?.data?.items || [];
+        state.pagination =
+          action.payload?.data?.pagination || initialState.pagination;
       })
       .addCase(fetchSales.rejected, (state, action) => {
         state.isLoading = false;

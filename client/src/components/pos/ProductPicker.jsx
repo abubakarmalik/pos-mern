@@ -27,7 +27,7 @@ const ProductPicker = ({
       )}
       {products.map((product) => (
         <button
-          key={product._id}
+          key={product.id}
           type="button"
           onClick={() => onAddToCart(product)}
           className="rounded-lg border border-slate-200 p-3 text-left hover:border-blue-500"

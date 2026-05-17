@@ -7,6 +7,11 @@ export const selectSales = createSelector(
   (sales) => sales.items,
 );
 
+export const selectSalesPagination = createSelector(
+  [selectSalesState],
+  (sales) => sales.pagination,
+);
+
 export const selectCurrentSale = createSelector(
   [selectSalesState],
   (sales) => sales.currentItem,

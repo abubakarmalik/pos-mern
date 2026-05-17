@@ -36,25 +36,25 @@ const PosPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchProducts(search));
+    dispatch(fetchProducts({ search, isActive: true, limit: 100 }));
   }, [dispatch, search]);
 
   useEffect(() => {
-    if (!lastCreatedSale?._id) return;
+    if (!lastCreatedSale?.id) return;
 
     setCart([]);
     setCartDiscount('0');
     setCashReceived('');
-    navigate(`/invoice/${lastCreatedSale._id}`);
+    navigate(`/invoice/${lastCreatedSale.id}`);
     dispatch(clearCreatedSale());
   }, [dispatch, lastCreatedSale, navigate]);
 
   const addToCart = (product) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.product._id === product._id);
+      const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.product._id === product._id
+          item.product.id === product.id
             ? { ...item, qty: item.qty + 1 }
             : item,
         );
@@ -66,7 +66,7 @@ const PosPage = () => {
   const updateQty = (id, qty) => {
     setCart((prev) =>
       prev
-        .map((item) => (item.product._id === id ? { ...item, qty } : item))
+        .map((item) => (item.product.id === id ? { ...item, qty } : item))
         .filter((item) => item.qty > 0),
     );
   };
@@ -76,7 +76,7 @@ const PosPage = () => {
     const amount = Number.isNaN(parsed) ? 0 : parsed;
     setCart((prev) =>
       prev.map((item) =>
-        item.product._id === id
+        item.product.id === id
           ? { ...item, lineDiscount: amount }
           : item,
       ),
@@ -119,7 +119,7 @@ const PosPage = () => {
 
     const payload = {
       items: cart.map((item) => ({
-        productId: item.product._id,
+        productId: item.product.id,
         qty: item.qty,
         lineDiscount: item.lineDiscount,
       })),

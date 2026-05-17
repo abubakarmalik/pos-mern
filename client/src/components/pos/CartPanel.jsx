@@ -40,7 +40,7 @@ const CartPanel = ({
           min="0"
           value={row.qty}
           onChange={(event) =>
-            onQtyChange(row.product._id, Number(event.target.value))
+            onQtyChange(row.product.id, Number(event.target.value))
           }
           className="w-20"
         />
@@ -62,7 +62,7 @@ const CartPanel = ({
           step="0.01"
           value={row.lineDiscount}
           onChange={(event) =>
-            onLineDiscountChange(row.product._id, event.target.value)
+            onLineDiscountChange(row.product.id, event.target.value)
           }
           className="w-28"
         />
@@ -123,6 +123,9 @@ const CartPanel = ({
         >
           <option value="CASH">Cash</option>
           <option value="CARD">Card</option>
+          <option value="BANK">Bank</option>
+          <option value="JAZZCASH">JazzCash</option>
+          <option value="EASYPAISA">EasyPaisa</option>
         </Select>
         {paymentMethod === 'CASH' && (
           <div className="space-y-2">
