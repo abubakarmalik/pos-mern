@@ -2,25 +2,38 @@ const { prisma } = require('../../config/prisma');
 const { getPaginationParams } = require('../utils/pagination');
 
 const includeRelations = {
-  products: true,
-  users: true,
+  sales: {
+    select: {
+      id: true,
+      invoice_no: true,
+      total: true,
+      status: true,
+      created_at: true,
+    },
+  },
+  users: {
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      role: true,
+    },
+  },
 };
 
 const buildWhere = ({
-  productId,
-  type,
+  search,
+  saleId,
   dateFrom,
   dateTo,
   from,
   to,
-  search,
 } = {}) => {
   const where = {};
   const startDate = dateFrom || from;
   const endDate = dateTo || to;
 
-  if (productId) where.product_id = productId;
-  if (type) where.type = type;
+  if (saleId) where.sale_id = saleId;
   if (startDate || endDate) {
     where.created_at = {};
     if (startDate) where.created_at.gte = new Date(startDate);
@@ -28,21 +41,25 @@ const buildWhere = ({
   }
   if (search) {
     where.OR = [
-      { note: { contains: search, mode: 'insensitive' } },
-      { ref_type: { contains: search, mode: 'insensitive' } },
-      { products: { name: { contains: search, mode: 'insensitive' } } },
-      { products: { sku: { contains: search, mode: 'insensitive' } } },
+      { reason: { contains: search, mode: 'insensitive' } },
+      { sales: { invoice_no: { contains: search, mode: 'insensitive' } } },
+      { users: { name: { contains: search, mode: 'insensitive' } } },
+      { users: { username: { contains: search, mode: 'insensitive' } } },
     ];
   }
 
   return where;
 };
 
-const transaction = (callback) => prisma.$transaction(callback);
-
 const create = (data, db = prisma) =>
-  db.stock_ledger.create({
+  db.refunds.create({
     data,
+    include: includeRelations,
+  });
+
+const findById = (id, db = prisma) =>
+  db.refunds.findUnique({
+    where: { id },
     include: includeRelations,
   });
 
@@ -50,39 +67,21 @@ const findManyPaginated = async (query = {}) => {
   const { page, limit, skip } = getPaginationParams(query);
   const where = buildWhere(query);
   const [items, total] = await prisma.$transaction([
-    prisma.stock_ledger.findMany({
+    prisma.refunds.findMany({
       where,
       include: includeRelations,
       orderBy: { created_at: 'desc' },
       skip,
       take: limit,
     }),
-    prisma.stock_ledger.count({ where }),
+    prisma.refunds.count({ where }),
   ]);
 
   return { items, page, limit, total };
 };
 
-const getRefundedQtyBySaleId = async (saleId, db = prisma) => {
-  const rows = await db.stock_ledger.groupBy({
-    by: ['product_id'],
-    where: {
-      type: 'REFUND',
-      ref_type: 'REFUND',
-      ref_id: saleId,
-    },
-    _sum: { qty_change: true },
-  });
-
-  return rows.map((row) => ({
-    productId: row.product_id,
-    qty: Number(row._sum.qty_change || 0),
-  }));
-};
-
 module.exports = {
   create,
+  findById,
   findManyPaginated,
-  getRefundedQtyBySaleId,
-  transaction,
 };

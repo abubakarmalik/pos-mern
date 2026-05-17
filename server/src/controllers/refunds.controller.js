@@ -1,78 +1,42 @@
-const mongoose = require('mongoose');
-const Product = require('../models/product.model');
-const Sale = require('../models/sale.model');
-const Refund = require('../models/refund.model');
-const StockLedger = require('../models/stockLedger.model');
-const { sendSuccess } = require('../utils/response');
+const refundsService = require('../services/refunds.service');
+const { sendSuccess, sendError } = require('../utils/response');
+
+const handleServiceError = (res, error) =>
+  sendError(res, error.status, error.message, {
+    code: error.errorCode,
+    details: error.details,
+  });
 
 const createRefund = async (req, res, next) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const { saleId, reason } = req.validated.body;
-    const sale = await Sale.findById(saleId).session(session);
-    if (!sale)
-      throw Object.assign(new Error('Sale not found'), {
-        status: 404,
-        errorCode: 'SALE_NOT_FOUND',
-        details: { saleId },
-      });
-    if (sale.status === 'REFUNDED')
-      throw Object.assign(new Error('Sale already refunded'), {
-        status: 400,
-        errorCode: 'SALE_ALREADY_REFUNDED',
-        details: { saleId },
-      });
-
-    const ledgerEntries = [];
-    for (const item of sale.items) {
-      const product = await Product.findById(item.productId).session(session);
-      if (!product)
-        throw Object.assign(new Error('Product not found'), {
-          status: 404,
-          errorCode: 'PRODUCT_NOT_FOUND',
-          details: { productId: item.productId },
-        });
-
-      product.stockOnHand += item.qty;
-      await product.save({ session });
-
-      ledgerEntries.push({
-        productId: product._id,
-        type: 'REFUND',
-        qtyChange: item.qty,
-        refType: 'REFUND',
-        refId: sale._id,
-        note: `Refund for ${sale.invoiceNo}`,
-        createdBy: req.user.id,
-      });
-    }
-
-    const refund = await Refund.create(
-      [
-        {
-          saleId: sale._id,
-          reason,
-          createdBy: req.user.id,
-        },
-      ],
-      { session },
-    );
-
-    sale.status = 'REFUNDED';
-    await sale.save({ session });
-
-    await StockLedger.insertMany(ledgerEntries, { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return sendSuccess(res, refund[0], 'Refund processed', 201);
+    const refund = await refundsService.createRefund({
+      payload: req.validated.body,
+      createdBy: req.user.id,
+    });
+    return sendSuccess(res, refund, 'Refund processed', 201);
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
 
-module.exports = { createRefund };
+const listRefunds = async (req, res, next) => {
+  try {
+    const refunds = await refundsService.listRefunds(req.validated.query);
+    return sendSuccess(res, refunds, 'Refunds fetched');
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getRefund = async (req, res, next) => {
+  try {
+    const refund = await refundsService.getRefund(req.validated.params.id);
+    return sendSuccess(res, refund, 'Refund fetched');
+  } catch (error) {
+    if (error.errorCode) return handleServiceError(res, error);
+    return next(error);
+  }
+};
+
+module.exports = { createRefund, getRefund, listRefunds };

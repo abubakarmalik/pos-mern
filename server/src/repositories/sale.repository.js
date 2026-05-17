@@ -77,10 +77,18 @@ const findManyPaginated = async (query = {}) => {
   return { items, page, limit, total };
 };
 
+const updateStatus = (id, status, db = prisma) =>
+  db.sales.update({
+    where: { id },
+    data: { status },
+    include: includeSaleRelations,
+  });
+
 module.exports = {
   countByInvoiceDate,
   create,
   findById,
   findManyPaginated,
   transaction,
+  updateStatus,
 };
