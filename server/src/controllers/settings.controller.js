@@ -1,13 +1,10 @@
-const Setting = require('../models/setting.model');
 const { sendSuccess } = require('../utils/response');
+const settingsService = require('../services/settings.service');
 
 const getSettings = async (_req, res, next) => {
   try {
-    let setting = await Setting.findOne();
-    if (!setting) {
-      setting = await Setting.create({});
-    }
-    return sendSuccess(res, setting, 'Settings fetched');
+    const settings = await settingsService.getSettings();
+    return sendSuccess(res, settings, 'Settings fetched');
   } catch (error) {
     return next(error);
   }
@@ -15,13 +12,8 @@ const getSettings = async (_req, res, next) => {
 
 const updateSettings = async (req, res, next) => {
   try {
-    let setting = await Setting.findOne();
-    if (!setting) setting = await Setting.create({});
-
-    Object.assign(setting, req.validated.body);
-    await setting.save();
-
-    return sendSuccess(res, setting, 'Settings updated');
+    const settings = await settingsService.updateSettings(req.validated.body);
+    return sendSuccess(res, settings, 'Settings updated');
   } catch (error) {
     return next(error);
   }

@@ -7,6 +7,11 @@ export const selectProducts = createSelector(
   (products) => products.items,
 );
 
+export const selectProductsPagination = createSelector(
+  [selectProductsState],
+  (products) => products.pagination,
+);
+
 export const selectCurrentProduct = createSelector(
   [selectProductsState],
   (products) => products.currentItem,

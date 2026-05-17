@@ -3,6 +3,7 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 
 const ProductForm = ({
+  categories,
   form,
   isEdit,
   isSaving,
@@ -22,13 +23,20 @@ const ProductForm = ({
         onChange={onChange}
         required
       />
-      <Input label="SKU" name="sku" value={form.sku} onChange={onChange} />
-      <Input
+      <Input label="SKU" name="sku" value={form.sku} onChange={onChange} required />
+      <Select
         label="Category"
-        name="category"
-        value={form.category}
+        name="categoryId"
+        value={form.categoryId}
         onChange={onChange}
-      />
+      >
+        <option value="">No category</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </Select>
       <Input label="Unit" name="unit" value={form.unit} onChange={onChange} />
       <Input
         label="Cost Price (PKR)"

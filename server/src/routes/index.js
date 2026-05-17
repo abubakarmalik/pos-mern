@@ -1,5 +1,6 @@
 const express = require('express');
 const authRoutes = require('./auth.routes');
+const categoryRoutes = require('./categories.routes');
 const userRoutes = require('./users.routes');
 const productRoutes = require('./products.routes');
 const inventoryRoutes = require('./inventory.routes');
@@ -11,6 +12,7 @@ const settingRoutes = require('./settings.routes');
 const router = express.Router();
 
 router.use('/auth', authRoutes);
+router.use('/categories', categoryRoutes);
 router.use('/users', userRoutes);
 router.use('/products', productRoutes);
 router.use('/inventory', inventoryRoutes);

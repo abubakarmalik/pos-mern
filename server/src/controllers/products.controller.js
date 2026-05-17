@@ -1,16 +1,16 @@
-const Product = require('../models/product.model');
 const { sendSuccess, sendError } = require('../utils/response');
+const productService = require('../services/product.service');
+
+const handleServiceError = (res, error) =>
+  sendError(res, error.status, error.message, {
+    code: error.errorCode,
+    details: error.details,
+  });
 
 const listProducts = async (req, res, next) => {
   try {
-    const { search } = req.query;
-    const query = {};
-    if (search) {
-      const regex = new RegExp(search, 'i');
-      query.$or = [{ name: regex }, { sku: regex }, { category: regex }];
-    }
-    const products = await Product.find(query).sort({ createdAt: -1 });
-    return sendSuccess(res, products, 'Products fetched');
+    const products = await productService.listProducts(req.validated.query);
+    return sendSuccess(res, products, 'Products fetched successfully');
   } catch (error) {
     return next(error);
   }
@@ -18,28 +18,20 @@ const listProducts = async (req, res, next) => {
 
 const getProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product)
-      return sendError(res, 404, 'Product not found', {
-        code: 'PRODUCT_NOT_FOUND',
-        details: { id: req.params.id },
-      });
-    return sendSuccess(res, product, 'Product fetched');
+    const product = await productService.getProduct(req.validated.params.id);
+    return sendSuccess(res, product, 'Product fetched successfully');
   } catch (error) {
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
 
 const createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.validated.body);
-    return sendSuccess(res, product, 'Product created', 201);
+    const product = await productService.createProduct(req.validated.body);
+    return sendSuccess(res, product, 'Product created successfully', 201);
   } catch (error) {
-    if (error.code === 11000)
-      return sendError(res, 409, 'SKU already exists', {
-        code: 'DUPLICATE_SKU',
-        details: { fields: Object.keys(error.keyValue || {}) },
-      });
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
@@ -47,21 +39,10 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.validated.params;
-    const product = await Product.findByIdAndUpdate(id, req.validated.body, {
-      new: true,
-    });
-    if (!product)
-      return sendError(res, 404, 'Product not found', {
-        code: 'PRODUCT_NOT_FOUND',
-        details: { id },
-      });
-    return sendSuccess(res, product, 'Product updated');
+    const product = await productService.updateProduct(id, req.validated.body);
+    return sendSuccess(res, product, 'Product updated successfully');
   } catch (error) {
-    if (error.code === 11000)
-      return sendError(res, 409, 'SKU already exists', {
-        code: 'DUPLICATE_SKU',
-        details: { fields: Object.keys(error.keyValue || {}) },
-      });
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
@@ -69,20 +50,14 @@ const updateProduct = async (req, res, next) => {
 const toggleProduct = async (req, res, next) => {
   try {
     const { id } = req.validated.params;
-    const product = await Product.findById(id);
-    if (!product)
-      return sendError(res, 404, 'Product not found', {
-        code: 'PRODUCT_NOT_FOUND',
-        details: { id },
-      });
-    product.isActive = !product.isActive;
-    await product.save();
+    const product = await productService.toggleProduct(id);
     return sendSuccess(
       res,
       product,
       product.isActive ? 'Product enabled' : 'Product disabled',
     );
   } catch (error) {
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };

@@ -9,10 +9,13 @@ import SalesListPage from '../pages/SalesListPage';
 import SaleDetailPage from '../pages/SaleDetailPage';
 import ProductsPage from '../pages/ProductsPage';
 import ProductFormPage from '../pages/ProductFormPage';
+import CategoriesPage from '../pages/CategoriesPage';
+import CategoryFormPage from '../pages/CategoryFormPage';
 import InventoryPage from '../pages/InventoryPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
 import UsersPage from '../pages/UsersPage';
+import UserFormPage from '../pages/UserFormPage';
 import {
   selectAuthLoading,
   selectIsAuthenticated,
@@ -56,6 +59,30 @@ const AppRoutes = () => (
       <Route path="/sales/:id" element={<SaleDetailPage />} />
       <Route path="/products" element={<ProductsPage />} />
       <Route
+        path="/categories"
+        element={
+          <RequireRole roles={['ADMIN']}>
+            <CategoriesPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/categories/new"
+        element={
+          <RequireRole roles={['ADMIN']}>
+            <CategoryFormPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/categories/:id/edit"
+        element={
+          <RequireRole roles={['ADMIN']}>
+            <CategoryFormPage />
+          </RequireRole>
+        }
+      />
+      <Route
         path="/products/new"
         element={
           <RequireRole roles={['ADMIN']}>
@@ -78,6 +105,14 @@ const AppRoutes = () => (
         element={
           <RequireRole roles={['ADMIN']}>
             <UsersPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/users/new"
+        element={
+          <RequireRole roles={['ADMIN']}>
+            <UserFormPage />
           </RequireRole>
         }
       />

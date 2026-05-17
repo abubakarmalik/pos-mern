@@ -9,6 +9,7 @@ const navItems = [
   { to: '/pos', label: 'POS' },
   { to: '/sales', label: 'Sales' },
   { to: '/products', label: 'Products' },
+  { to: '/categories', label: 'Categories', role: 'ADMIN' },
   { to: '/inventory', label: 'Inventory' },
   { to: '/reports', label: 'Reports' },
   { to: '/users', label: 'Users', role: 'ADMIN' },

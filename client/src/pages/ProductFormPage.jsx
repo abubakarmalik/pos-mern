@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductForm from '../components/products/ProductForm';
+import { fetchCategories } from '../features/categories/categoriesSlice';
+import { selectCategories } from '../features/categories/selectors';
 import {
   clearCurrentProduct,
   createProduct,
@@ -19,6 +21,7 @@ const defaultForm = {
   name: '',
   sku: '',
   category: '',
+  categoryId: '',
   costPrice: 0,
   salePrice: 0,
   taxRate: 0,
@@ -33,9 +36,14 @@ const ProductFormPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const product = useSelector(selectCurrentProduct);
+  const categories = useSelector(selectCategories);
   const isLoading = useSelector(selectCurrentProductLoading);
   const isSaving = useSelector(selectProductSaving);
   const [form, setForm] = useState(defaultForm);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!id) {
@@ -56,6 +64,7 @@ const ProductFormPage = () => {
       name: product.name,
       sku: product.sku || '',
       category: product.category || '',
+      categoryId: product.categoryId || '',
       costPrice: product.costPrice,
       salePrice: product.salePrice,
       taxRate: product.taxRate,
@@ -78,6 +87,8 @@ const ProductFormPage = () => {
     event.preventDefault();
     const payload = {
       ...form,
+      categoryId: form.categoryId || undefined,
+      categoryName: form.categoryId ? undefined : form.category || undefined,
       minStock: form.minStock === '' ? null : Number(form.minStock),
       costPrice: Number(form.costPrice),
       salePrice: Number(form.salePrice),
@@ -103,6 +114,7 @@ const ProductFormPage = () => {
   return (
     <ProductForm
       form={form}
+      categories={categories}
       isEdit={Boolean(id)}
       isSaving={isSaving}
       onChange={handleChange}

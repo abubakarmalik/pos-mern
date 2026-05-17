@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const env = require('../../config/env');
-const { prisma } = require('../../config/prisma');
+const usersRepository = require('../repositories/users.repository');
 const { mapUser } = require('../utils/userMapper');
 
 const normalizeUsername = (username) => username.trim().toLowerCase();
@@ -21,15 +21,13 @@ const createAuthError = (message, errorCode, status = 401, details = null) =>
   Object.assign(new Error(message), { status, errorCode, details });
 
 const findActiveUserById = async (id) => {
-  const user = await prisma.users.findUnique({ where: { id } });
+  const user = await usersRepository.findById(id);
   if (!user || !user.is_active) return null;
   return user;
 };
 
 const loginUser = async ({ username, password }) => {
-  const user = await prisma.users.findUnique({
-    where: { username: normalizeUsername(username) },
-  });
+  const user = await usersRepository.findByUsername(normalizeUsername(username));
 
   if (!user || !user.is_active) {
     throw createAuthError(

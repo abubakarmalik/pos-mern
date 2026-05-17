@@ -7,6 +7,21 @@ export const selectInventoryAdjusting = createSelector(
   (inventory) => inventory.isAdjusting,
 );
 
+export const selectStockLedger = createSelector(
+  [selectInventoryState],
+  (inventory) => inventory.ledgerItems,
+);
+
+export const selectStockLedgerPagination = createSelector(
+  [selectInventoryState],
+  (inventory) => inventory.ledgerPagination,
+);
+
+export const selectStockLedgerLoading = createSelector(
+  [selectInventoryState],
+  (inventory) => inventory.isLoadingLedger,
+);
+
 export const selectInventoryMessage = createSelector(
   [selectInventoryState],
   (inventory) => inventory.message,

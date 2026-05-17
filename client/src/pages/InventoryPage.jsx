@@ -3,9 +3,18 @@ import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import AdjustStockModal from '../components/inventory/AdjustStockModal';
 import InventoryTable from '../components/inventory/InventoryTable';
+import StockLedgerTable from '../components/inventory/StockLedgerTable';
 import { selectUser } from '../features/auth/authSelector';
-import { adjustInventory } from '../features/inventory/inventorySlice';
-import { selectInventoryAdjusting } from '../features/inventory/selectors';
+import {
+  adjustInventory,
+  fetchStockLedger,
+} from '../features/inventory/inventorySlice';
+import {
+  selectInventoryAdjusting,
+  selectStockLedger,
+  selectStockLedgerLoading,
+  selectStockLedgerPagination,
+} from '../features/inventory/selectors';
 import { fetchProducts } from '../features/products/productsSlice';
 import {
   selectProducts,
@@ -18,19 +27,27 @@ const InventoryPage = () => {
   const products = useSelector(selectProducts);
   const isLoading = useSelector(selectProductsLoading);
   const isAdjusting = useSelector(selectInventoryAdjusting);
+  const ledger = useSelector(selectStockLedger);
+  const ledgerPagination = useSelector(selectStockLedgerPagination);
+  const isLedgerLoading = useSelector(selectStockLedgerLoading);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [qtyChange, setQtyChange] = useState('');
   const [note, setNote] = useState('');
+  const [ledgerPage, setLedgerPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(fetchStockLedger({ page: ledgerPage, limit: 20 }));
+  }, [dispatch, ledgerPage]);
+
   const handleAdjust = () => {
     dispatch(
       adjustInventory({
-        productId: selectedProduct?._id,
+        productId: selectedProduct?.id,
         qtyChange: Number(qtyChange),
         note,
       }),
@@ -42,6 +59,7 @@ const InventoryPage = () => {
         setQtyChange('');
         setNote('');
         dispatch(fetchProducts());
+        dispatch(fetchStockLedger({ page: ledgerPage, limit: 20 }));
       })
       .catch((error) => toast.error(error.message));
   };
@@ -62,6 +80,18 @@ const InventoryPage = () => {
           onAdjust={openAdjustModal}
           products={products}
           user={user}
+        />
+      </div>
+
+      <div className="rounded-xl bg-white p-4 shadow">
+        <h3 className="mb-4 text-base font-semibold text-slate-800">
+          Stock Ledger
+        </h3>
+        <StockLedgerTable
+          isLoading={isLedgerLoading}
+          ledger={ledger}
+          onPageChange={setLedgerPage}
+          pagination={ledgerPagination}
         />
       </div>
 

@@ -1,18 +1,11 @@
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import Modal from '../ui/Modal';
 import Select from '../ui/Select';
 
-const UserFormModal = ({
-  form,
-  isCreating,
-  onChange,
-  onClose,
-  onSubmit,
-  open,
-}) => (
-  <Modal open={open} title="Create User" onClose={onClose}>
-    <form onSubmit={onSubmit} className="space-y-4">
+const UserForm = ({ form, isCreating, onChange, onSubmit }) => (
+  <div className="rounded-xl bg-white p-6 shadow">
+    <h2 className="text-lg font-semibold text-slate-800">New User</h2>
+    <form onSubmit={onSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
       <Input
         label="Name"
         name="name"
@@ -37,20 +30,15 @@ const UserFormModal = ({
       />
       <Select label="Role" name="role" value={form.role} onChange={onChange}>
         <option value="CASHIER">Cashier</option>
-        <option value="ADMIN" disabled>
-          Admin
-        </option>
+        <option value="ADMIN">Admin</option>
       </Select>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
+      <div className="md:col-span-2 flex justify-end">
         <Button type="submit" disabled={isCreating}>
-          {isCreating ? 'Creating...' : 'Create User'}
+          {isCreating ? 'Creating...' : 'Save User'}
         </Button>
       </div>
     </form>
-  </Modal>
+  </div>
 );
 
-export default UserFormModal;
+export default UserForm;

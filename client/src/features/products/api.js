@@ -1,7 +1,12 @@
 import apiClient from '../../api/client';
 
-export const fetchProductsApi = (search = '') =>
-  apiClient.get('/products', { params: search ? { search } : undefined });
+const cleanParams = (params) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value !== false),
+  );
+
+export const fetchProductsApi = (params = {}) =>
+  apiClient.get('/products', { params: cleanParams(params) });
 
 export const fetchProductApi = (id) => apiClient.get(`/products/${id}`);
 

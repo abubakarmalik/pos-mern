@@ -1,22 +1,21 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
-  createProductApi,
-  fetchProductApi,
-  fetchProductsApi,
-  toggleProductApi,
-  updateProductApi,
+  createCategoryApi,
+  fetchCategoriesApi,
+  fetchCategoryApi,
+  toggleCategoryApi,
+  updateCategoryApi,
 } from './api';
-import { PRODUCTS_FEATURE_KEY } from './constants';
 
 const initialState = {
   items: [],
+  currentItem: null,
   pagination: {
     page: 1,
-    limit: 20,
+    limit: 100,
     total: 0,
     totalPages: 0,
   },
-  currentItem: null,
   isLoading: false,
   isLoadingCurrent: false,
   isCreating: false,
@@ -26,13 +25,18 @@ const initialState = {
   error: null,
 };
 
-const getErrorPayload = (error) => error.response?.data || { message: error.message };
+const getErrorPayload = (error) =>
+  error.response?.data || { message: error.message };
 
-export const fetchProducts = createAsyncThunk(
-  'products/fetchProducts',
+export const fetchCategories = createAsyncThunk(
+  'categories/fetchCategories',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await fetchProductsApi(params);
+      const response = await fetchCategoriesApi({
+        page: 1,
+        limit: 100,
+        ...params,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
@@ -40,11 +44,11 @@ export const fetchProducts = createAsyncThunk(
   },
 );
 
-export const fetchProduct = createAsyncThunk(
-  'products/fetchProduct',
+export const fetchCategory = createAsyncThunk(
+  'categories/fetchCategory',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetchProductApi(id);
+      const response = await fetchCategoryApi(id);
       return response.data;
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
@@ -52,11 +56,11 @@ export const fetchProduct = createAsyncThunk(
   },
 );
 
-export const createProduct = createAsyncThunk(
-  'products/createProduct',
+export const createCategory = createAsyncThunk(
+  'categories/createCategory',
   async (payload, { rejectWithValue }) => {
     try {
-      const response = await createProductApi(payload);
+      const response = await createCategoryApi(payload);
       return response.data;
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
@@ -64,11 +68,11 @@ export const createProduct = createAsyncThunk(
   },
 );
 
-export const updateProduct = createAsyncThunk(
-  'products/updateProduct',
+export const updateCategory = createAsyncThunk(
+  'categories/updateCategory',
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const response = await updateProductApi(id, payload);
+      const response = await updateCategoryApi(id, payload);
       return response.data;
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
@@ -76,100 +80,105 @@ export const updateProduct = createAsyncThunk(
   },
 );
 
-export const toggleProduct = createAsyncThunk(
-  'products/toggleProduct',
+export const toggleCategory = createAsyncThunk(
+  'categories/toggleCategory',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await toggleProductApi(id);
-      return { ...response.data, id };
+      const response = await toggleCategoryApi(id);
+      return response.data;
     } catch (error) {
       return rejectWithValue(getErrorPayload(error));
     }
   },
 );
 
-const productsSlice = createSlice({
-  name: PRODUCTS_FEATURE_KEY,
+const categoriesSlice = createSlice({
+  name: 'categories',
   initialState,
   reducers: {
-    clearCurrentProduct(state) {
+    clearCurrentCategory(state) {
       state.currentItem = null;
       state.error = null;
     },
-    clearProductsMessage(state) {
+    clearCategoriesMessage(state) {
       state.message = null;
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchCategories.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
+      .addCase(fetchCategories.fulfilled, (state, action) => {
         state.isLoading = false;
         state.items = action.payload?.data?.items || [];
         state.pagination =
           action.payload?.data?.pagination || initialState.pagination;
         state.message = action.payload?.message || null;
       })
-      .addCase(fetchProducts.rejected, (state, action) => {
+      .addCase(fetchCategories.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.message || action.error.message;
       })
-      .addCase(fetchProduct.pending, (state) => {
+      .addCase(fetchCategory.pending, (state) => {
         state.isLoadingCurrent = true;
         state.error = null;
       })
-      .addCase(fetchProduct.fulfilled, (state, action) => {
+      .addCase(fetchCategory.fulfilled, (state, action) => {
         state.isLoadingCurrent = false;
         state.currentItem = action.payload?.data || null;
       })
-      .addCase(fetchProduct.rejected, (state, action) => {
+      .addCase(fetchCategory.rejected, (state, action) => {
         state.isLoadingCurrent = false;
         state.error = action.payload?.message || action.error.message;
       })
-      .addCase(createProduct.pending, (state) => {
+      .addCase(createCategory.pending, (state) => {
         state.isCreating = true;
         state.error = null;
       })
-      .addCase(createProduct.fulfilled, (state, action) => {
+      .addCase(createCategory.fulfilled, (state, action) => {
         state.isCreating = false;
         state.currentItem = action.payload?.data || null;
         state.message = action.payload?.message || null;
       })
-      .addCase(createProduct.rejected, (state, action) => {
+      .addCase(createCategory.rejected, (state, action) => {
         state.isCreating = false;
         state.error = action.payload?.message || action.error.message;
       })
-      .addCase(updateProduct.pending, (state) => {
+      .addCase(updateCategory.pending, (state) => {
         state.isUpdating = true;
         state.error = null;
       })
-      .addCase(updateProduct.fulfilled, (state, action) => {
+      .addCase(updateCategory.fulfilled, (state, action) => {
         state.isUpdating = false;
         state.currentItem = action.payload?.data || state.currentItem;
         state.message = action.payload?.message || null;
       })
-      .addCase(updateProduct.rejected, (state, action) => {
+      .addCase(updateCategory.rejected, (state, action) => {
         state.isUpdating = false;
         state.error = action.payload?.message || action.error.message;
       })
-      .addCase(toggleProduct.pending, (state) => {
+      .addCase(toggleCategory.pending, (state) => {
         state.isToggling = true;
         state.error = null;
       })
-      .addCase(toggleProduct.fulfilled, (state, action) => {
+      .addCase(toggleCategory.fulfilled, (state, action) => {
         state.isToggling = false;
+        const updated = action.payload?.data;
+        state.items = state.items.map((category) =>
+          category.id === updated?.id ? updated : category,
+        );
         state.message = action.payload?.message || null;
       })
-      .addCase(toggleProduct.rejected, (state, action) => {
+      .addCase(toggleCategory.rejected, (state, action) => {
         state.isToggling = false;
         state.error = action.payload?.message || action.error.message;
       });
   },
 });
 
-export const { clearCurrentProduct, clearProductsMessage } = productsSlice.actions;
-export default productsSlice.reducer;
+export const { clearCategoriesMessage, clearCurrentCategory } =
+  categoriesSlice.actions;
+export default categoriesSlice.reducer;

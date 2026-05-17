@@ -1,61 +1,31 @@
-const Product = require('../models/product.model');
-const StockLedger = require('../models/stockLedger.model');
-const Setting = require('../models/setting.model');
 const { sendSuccess, sendError } = require('../utils/response');
+const inventoryService = require('../services/inventory.service');
+
+const handleServiceError = (res, error) =>
+  sendError(res, error.status, error.message, {
+    code: error.errorCode,
+    details: error.details,
+  });
 
 const adjustStock = async (req, res, next) => {
   try {
     const { productId, qtyChange, note } = req.validated.body;
-    const product = await Product.findById(productId);
-    if (!product)
-      return sendError(res, 404, 'Product not found', {
-        code: 'PRODUCT_NOT_FOUND',
-        details: { productId },
-      });
-
-    const setting = await Setting.findOne();
-    const allowNegativeStock = setting?.allowNegativeStock ?? false;
-    const newStock = product.stockOnHand + qtyChange;
-    if (!allowNegativeStock && newStock < 0)
-      return sendError(res, 400, 'Stock cannot be negative', {
-        code: 'NEGATIVE_STOCK_NOT_ALLOWED',
-        details: {
-          productId,
-          stockOnHand: product.stockOnHand,
-          qtyChange,
-        },
-      });
-
-    product.stockOnHand = newStock;
-    await product.save();
-
-    const ledger = await StockLedger.create({
+    const adjustment = await inventoryService.adjustStock({
       productId,
-      type: 'ADJUSTMENT',
       qtyChange,
-      refType: 'ADJUSTMENT',
-      refId: productId,
       note,
       createdBy: req.user.id,
     });
-
-    return sendSuccess(res, { product, ledger }, 'Stock adjusted');
+    return sendSuccess(res, adjustment, 'Stock adjusted');
   } catch (error) {
+    if (error.errorCode) return handleServiceError(res, error);
     return next(error);
   }
 };
 
 const listLedger = async (req, res, next) => {
   try {
-    const { productId, from, to } = req.validated.query;
-    const query = {};
-    if (productId) query.productId = productId;
-    if (from || to) {
-      query.createdAt = {};
-      if (from) query.createdAt.$gte = new Date(from);
-      if (to) query.createdAt.$lte = new Date(to);
-    }
-    const ledger = await StockLedger.find(query).sort({ createdAt: -1 });
+    const ledger = await inventoryService.listLedger(req.validated.query);
     return sendSuccess(res, ledger, 'Stock ledger fetched');
   } catch (error) {
     return next(error);

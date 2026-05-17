@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { prisma } = require('../../config/prisma');
+const usersRepository = require('../repositories/users.repository');
 const { mapUser } = require('../utils/userMapper');
 
 const normalizeUsername = (username) => username.trim().toLowerCase();
@@ -9,9 +9,7 @@ const createServiceError = (message, errorCode, status, details = null) =>
 
 const createUser = async ({ name, username, password, role }) => {
   const normalizedUsername = normalizeUsername(username);
-  const existing = await prisma.users.findUnique({
-    where: { username: normalizedUsername },
-  });
+  const existing = await usersRepository.findByUsername(normalizedUsername);
 
   if (existing) {
     throw createServiceError('Username already in use', 'DUPLICATE_USERNAME', 409, {
@@ -20,37 +18,30 @@ const createUser = async ({ name, username, password, role }) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await prisma.users.create({
-    data: {
-      name,
-      username: normalizedUsername,
-      password_hash: passwordHash,
-      role,
-    },
+  const user = await usersRepository.create({
+    name,
+    username: normalizedUsername,
+    password_hash: passwordHash,
+    role,
   });
 
   return mapUser(user);
 };
 
 const listUsers = async () => {
-  const users = await prisma.users.findMany({
-    orderBy: { created_at: 'desc' },
-  });
+  const users = await usersRepository.findMany();
   return users.map(mapUser);
 };
 
 const toggleUser = async (id) => {
-  const user = await prisma.users.findUnique({
-    where: { id },
-  });
+  const user = await usersRepository.findById(id);
 
   if (!user) {
     throw createServiceError('User not found', 'USER_NOT_FOUND', 404, { id });
   }
 
-  const updatedUser = await prisma.users.update({
-    where: { id },
-    data: { is_active: !user.is_active },
+  const updatedUser = await usersRepository.update(id, {
+    is_active: !user.is_active,
   });
 
   return {

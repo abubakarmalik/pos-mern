@@ -11,6 +11,7 @@ import {
   selectProductsError,
   selectProductsLoading,
   selectProductsMessage,
+  selectProductsPagination,
 } from '../../features/products/selectors';
 import {
   clearProductsMessage,
@@ -18,15 +19,18 @@ import {
   toggleProduct,
 } from '../../features/products/productsSlice';
 
-const ProductsTable = ({ search }) => {
+const ProductsTable = ({ filters, onPageChange }) => {
   const dispatch = useDispatch();
   const items = useSelector(selectProducts);
+  const pagination = useSelector(selectProductsPagination);
   const isLoading = useSelector(selectProductsLoading);
   const error = useSelector(selectProductsError);
   const message = useSelector(selectProductsMessage);
   const user = useSelector(selectUser);
 
-  useEffect(() => { dispatch(fetchProducts(search)); }, [dispatch, search]);
+  useEffect(() => {
+    dispatch(fetchProducts(filters));
+  }, [dispatch, filters]);
   useEffect(() => {
     if (!error) return;
     toast.error(error);
@@ -43,11 +47,38 @@ const ProductsTable = ({ search }) => {
     { key: 'category', label: 'Category', render: (row) => row.category || '-' },
     { key: 'price', label: 'Price', render: (row) => formatCurrency(row.salePrice) },
     { key: 'status', label: 'Status', render: (row) => <Badge variant={row.isActive ? 'success' : 'danger'}>{row.isActive ? 'Active' : 'Inactive'}</Badge> },
-    { key: 'actions', label: 'Actions', render: (row) => <div className="flex gap-2">{user?.role === 'ADMIN' && <Link to={`/products/${row._id}/edit`} className="text-xs font-medium text-blue-600 hover:underline">Edit</Link>}{user?.role === 'ADMIN' && <button type="button" onClick={() => dispatch(toggleProduct(row._id)).then(() => dispatch(fetchProducts(search)))} className="text-xs font-medium text-slate-600 hover:text-slate-900">{row.isActive ? 'Disable' : 'Enable'}</button>}</div> },
+    { key: 'actions', label: 'Actions', render: (row) => <div className="flex gap-2">{user?.role === 'ADMIN' && <Link to={`/products/${row.id}/edit`} className="text-xs font-medium text-blue-600 hover:underline">Edit</Link>}{user?.role === 'ADMIN' && <button type="button" onClick={() => dispatch(toggleProduct(row.id)).then(() => dispatch(fetchProducts(filters)))} className="text-xs font-medium text-slate-600 hover:text-slate-900">{row.isActive ? 'Disable' : 'Enable'}</button>}</div> },
   ];
 
   if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-  return <Table columns={columns} data={items} />;
+  return (
+    <div className="space-y-4">
+      <Table columns={columns} data={items} />
+      <div className="flex items-center justify-between text-sm text-slate-600">
+        <span>
+          Page {pagination.page} of {pagination.totalPages || 1} · {pagination.total} products
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={pagination.page <= 1}
+            onClick={() => onPageChange(pagination.page - 1)}
+            className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={pagination.page >= pagination.totalPages}
+            onClick={() => onPageChange(pagination.page + 1)}
+            className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ProductsTable;
