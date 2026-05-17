@@ -1,3 +1,4 @@
+import Pagination from '../ui/Pagination';
 import Table from '../ui/Table';
 
 const formatDate = (value) => {
@@ -38,35 +39,16 @@ const StockLedgerTable = ({
     },
   ];
 
-  if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-
   return (
     <div className="space-y-4">
-      <Table columns={columns} data={ledger} />
-      <div className="flex items-center justify-between text-sm text-slate-600">
-        <span>
-          Page {pagination.page} of {pagination.totalPages || 1} ·{' '}
-          {pagination.total} entries
-        </span>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={pagination.page <= 1}
-            onClick={() => onPageChange(pagination.page - 1)}
-            className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            disabled={pagination.page >= pagination.totalPages}
-            onClick={() => onPageChange(pagination.page + 1)}
-            className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <Table
+        columns={columns}
+        data={ledger}
+        isLoading={isLoading}
+        emptyTitle="No stock movement"
+        emptyDescription="Inventory adjustments and sales movement will appear here."
+      />
+      <Pagination pagination={pagination} onPageChange={onPageChange} itemLabel="entries" />
     </div>
   );
 };

@@ -1,4 +1,6 @@
+import { FiPower } from 'react-icons/fi';
 import Badge from '../ui/Badge';
+import Button from '../ui/Button';
 import Table from '../ui/Table';
 
 const formatDate = (value) => {
@@ -51,20 +53,28 @@ const UsersTable = ({ currentUser, isLoading, isToggling, onToggle, users }) => 
         row.id === currentUser?.id ? (
           <span className="text-xs font-medium text-slate-400">Current user</span>
         ) : (
-          <button
-            type="button"
-            onClick={() => onToggle(row.id)}
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<FiPower />}
+            onClick={() => onToggle(row)}
             disabled={isToggling}
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
           >
             {row.isActive ? 'Disable' : 'Enable'}
-          </button>
+          </Button>
         ),
     },
   ];
 
-  if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-  return <Table columns={columns} data={users} />;
+  return (
+    <Table
+      columns={columns}
+      data={users}
+      isLoading={isLoading}
+      emptyTitle="No users found"
+      emptyDescription="Create staff accounts to manage POS access."
+    />
+  );
 };
 
 export default UsersTable;

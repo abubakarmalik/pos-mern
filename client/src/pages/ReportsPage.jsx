@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
+import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
 import Select from '../components/ui/Select';
+import StatCard from '../components/ui/StatCard';
 import Table from '../components/ui/Table';
 import { selectUser } from '../features/auth/authSelector';
 import { fetchCategories } from '../features/categories/categoriesSlice';
@@ -16,6 +18,8 @@ import {
   selectInventoryMovementReport,
   selectLowStockProductsReport,
   selectRangeSummary,
+  selectReportsError,
+  selectReportsLoading,
   selectSalesByDateReport,
   selectSalesByPaymentMethodReport,
   selectTodaySummary,
@@ -25,15 +29,9 @@ import { fetchUsers } from '../features/users/usersSlice';
 import { selectUsers } from '../features/users/selectors';
 import { formatCurrency } from '../utils/format';
 import { getTodayRange, toISODate } from '../utils/date';
+import useDebounce from '../hooks/useDebounce';
 
 const paymentMethods = ['CASH', 'CARD', 'BANK', 'JAZZCASH', 'EASYPAISA'];
-
-const SummaryMetric = ({ label, value }) => (
-  <div>
-    <p className="text-xs font-medium uppercase text-slate-400">{label}</p>
-    <p className="mt-1 text-sm font-semibold text-slate-700">{value}</p>
-  </div>
-);
 
 const ReportsPage = () => {
   const dispatch = useDispatch();
@@ -49,11 +47,18 @@ const ReportsPage = () => {
   const categories = useSelector(selectCategories);
   const users = useSelector(selectUsers);
   const currentUser = useSelector(selectUser);
+  const isLoading = useSelector(selectReportsLoading);
+  const error = useSelector(selectReportsError);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [cashierId, setCashierId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const reportFilters = useMemo(
+    () => ({ from, to, cashierId, paymentMethod, categoryId }),
+    [categoryId, cashierId, from, paymentMethod, to],
+  );
+  const debouncedFilters = useDebounce(reportFilters);
 
   useEffect(() => {
     dispatch(
@@ -61,9 +66,7 @@ const ReportsPage = () => {
         from: toISODate(todayRange.start),
         to: toISODate(todayRange.end),
       }),
-    )
-      .unwrap()
-      .catch((error) => toast.error(error.message));
+    );
   }, [dispatch, todayRange]);
 
   useEffect(() => {
@@ -74,10 +77,8 @@ const ReportsPage = () => {
   }, [currentUser?.role, dispatch]);
 
   useEffect(() => {
-    dispatch(fetchRangeReport({ from, to, cashierId, paymentMethod, categoryId }))
-      .unwrap()
-      .catch((error) => toast.error(error.message));
-  }, [categoryId, cashierId, dispatch, from, paymentMethod, to]);
+    dispatch(fetchRangeReport(debouncedFilters));
+  }, [debouncedFilters, dispatch]);
 
   const topProductColumns = [
     { key: 'name', label: 'Product' },
@@ -121,18 +122,39 @@ const ReportsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-4 shadow">
-        <h2 className="text-lg font-semibold text-slate-800">Reports</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-600">Today</h3>
-            <p className="text-sm text-slate-500">Sales: {todaySummary.salesCount || 0}</p>
-            <p className="text-sm text-slate-500">
-              Net: {formatCurrency(todaySummary.netTotal || 0)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-600">Date Range</h3>
+      <PageHeader
+        title="Reports"
+        description="Track daily performance, product movement, payment mix, and low-stock risk."
+      />
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Today sales" value={todaySummary.salesCount || 0} loading={isLoading} />
+        <StatCard
+          label="Today net"
+          value={formatCurrency(todaySummary.netTotal || 0)}
+          tone="emerald"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Range net sales"
+          value={formatCurrency(summary.netSales || 0)}
+          tone="blue"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Refunds"
+          value={formatCurrency(summary.totalRefunds || 0)}
+          tone="amber"
+          loading={isLoading}
+        />
+      </div>
+
+      <Card>
+        <h2 className="text-base font-semibold text-slate-900">Date range filters</h2>
             <div className="mt-2 grid gap-2 md:grid-cols-5">
               <Input type="date" label="From" value={from} onChange={(e) => setFrom(e.target.value)} />
               <Input type="date" label="To" value={to} onChange={(e) => setTo(e.target.value)} />
@@ -173,61 +195,53 @@ const ReportsPage = () => {
                 ))}
               </Select>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <SummaryMetric label="Sales" value={summary.salesCount || 0} />
-              <SummaryMetric label="Net total" value={formatCurrency(summary.netTotal || 0)} />
-              <SummaryMetric label="Refunds" value={formatCurrency(summary.totalRefunds || 0)} />
-              <SummaryMetric label="Net sales" value={formatCurrency(summary.netSales || 0)} />
-            </div>
-          </div>
-        </div>
-      </div>
+      </Card>
 
-      <div className="rounded-xl bg-white p-4 shadow">
+      <Card>
         <h3 className="text-base font-semibold text-slate-800">Top Products</h3>
         <div className="mt-4">
-          <Table columns={topProductColumns} data={topProducts} />
+          <Table columns={topProductColumns} data={topProducts} isLoading={isLoading} emptyTitle="No product sales" />
         </div>
-      </div>
+      </Card>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-xl bg-white p-4 shadow">
+        <Card>
           <h3 className="text-base font-semibold text-slate-800">Sales By Date</h3>
           <div className="mt-4">
-            <Table columns={salesByDateColumns} data={salesByDate} />
+            <Table columns={salesByDateColumns} data={salesByDate} isLoading={isLoading} />
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl bg-white p-4 shadow">
+        <Card>
           <h3 className="text-base font-semibold text-slate-800">Sales By Payment</h3>
           <div className="mt-4">
-            <Table columns={paymentColumns} data={salesByPaymentMethod} />
+            <Table columns={paymentColumns} data={salesByPaymentMethod} isLoading={isLoading} />
           </div>
-        </div>
+        </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-xl bg-white p-4 shadow">
+        <Card>
           <h3 className="text-base font-semibold text-slate-800">Cashier Performance</h3>
           <div className="mt-4">
-            <Table columns={cashierColumns} data={cashierPerformance} />
+            <Table columns={cashierColumns} data={cashierPerformance} isLoading={isLoading} />
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl bg-white p-4 shadow">
+        <Card>
           <h3 className="text-base font-semibold text-slate-800">Inventory Movement</h3>
           <div className="mt-4">
-            <Table columns={movementColumns} data={inventoryMovement} />
+            <Table columns={movementColumns} data={inventoryMovement} isLoading={isLoading} />
           </div>
-        </div>
+        </Card>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow">
+      <Card>
         <h3 className="text-base font-semibold text-slate-800">Low Stock Products</h3>
         <div className="mt-4">
-          <Table columns={lowStockColumns} data={lowStockProducts} />
+          <Table columns={lowStockColumns} data={lowStockProducts} isLoading={isLoading} emptyTitle="No low stock products" />
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

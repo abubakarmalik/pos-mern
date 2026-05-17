@@ -8,9 +8,22 @@ body,
 
 body {
   margin: 0;
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   color: #0f172a;
   font-family: 'Inter', system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 @media print {
@@ -24,5 +37,9 @@ body {
   }
   main {
     padding: 0 !important;
+  }
+  @page {
+    margin: 8mm;
+    size: 80mm auto;
   }
 }

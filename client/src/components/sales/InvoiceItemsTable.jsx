@@ -1,30 +1,28 @@
 import { formatCurrency } from '../../utils/format';
 
 const InvoiceItemsTable = ({ currencySymbol, items }) => (
-  <div className="overflow-hidden rounded-lg border border-slate-200">
-    <table className="min-w-full text-sm">
-      <thead className="bg-slate-50 text-left text-slate-600">
+  <div className="border-b border-dashed border-slate-400 py-3">
+    <table className="w-full text-xs">
+      <thead className="text-left uppercase text-slate-500">
         <tr>
-          <th className="px-4 py-2">Item</th>
-          <th className="px-4 py-2">Qty</th>
-          <th className="px-4 py-2">Price</th>
-          <th className="px-4 py-2">Total</th>
+          <th className="py-1">Item</th>
+          <th className="py-1 text-center">Qty</th>
+          <th className="py-1 text-right">Total</th>
         </tr>
       </thead>
       <tbody>
         {items.map((item) => (
-          <tr key={item.productId} className="border-t border-slate-100">
-            <td className="px-4 py-2">
-              <p className="font-medium text-slate-800">
+          <tr key={item.productId} className="border-t border-dashed border-slate-200">
+            <td className="py-2 pr-2">
+              <p className="font-semibold text-slate-900">
                 {item.nameSnapshot}
               </p>
-              <p className="text-xs text-slate-500">{item.skuSnapshot}</p>
+              <p className="text-[11px] text-slate-500">
+                {item.skuSnapshot || 'No SKU'} · {formatCurrency(item.salePriceSnapshot, currencySymbol)}
+              </p>
             </td>
-            <td className="px-4 py-2">{item.qty}</td>
-            <td className="px-4 py-2">
-              {formatCurrency(item.salePriceSnapshot, currencySymbol)}
-            </td>
-            <td className="px-4 py-2">
+            <td className="py-2 text-center">{item.qty}</td>
+            <td className="py-2 text-right font-semibold">
               {formatCurrency(item.lineTotal, currencySymbol)}
             </td>
           </tr>

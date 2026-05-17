@@ -112,7 +112,6 @@ const productsSlice = createSlice({
         state.items = action.payload?.data?.items || [];
         state.pagination =
           action.payload?.data?.pagination || initialState.pagination;
-        state.message = action.payload?.message || null;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;

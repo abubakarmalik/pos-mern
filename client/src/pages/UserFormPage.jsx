@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import UserForm from '../components/users/UserForm';
-import { createUser } from '../features/users/usersSlice';
+import { clearUsersMessage, createUser } from '../features/users/usersSlice';
 import { selectUsersCreating } from '../features/users/selectors';
 
 const defaultForm = {
@@ -19,6 +19,10 @@ const UserFormPage = () => {
   const isCreating = useSelector(selectUsersCreating);
   const [form, setForm] = useState(defaultForm);
 
+  useEffect(() => {
+    setForm(defaultForm);
+  }, []);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -30,6 +34,7 @@ const UserFormPage = () => {
       .unwrap()
       .then(() => {
         toast.success('User created');
+        dispatch(clearUsersMessage());
         navigate('/users');
       })
       .catch((error) => toast.error(error.message));

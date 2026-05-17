@@ -4,6 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import AdjustStockModal from '../components/inventory/AdjustStockModal';
 import InventoryTable from '../components/inventory/InventoryTable';
 import StockLedgerTable from '../components/inventory/StockLedgerTable';
+import Card from '../components/ui/Card';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
 import { selectUser } from '../features/auth/authSelector';
 import {
   adjustInventory,
@@ -20,6 +24,7 @@ import {
   selectProducts,
   selectProductsLoading,
 } from '../features/products/selectors';
+import useDebounce from '../hooks/useDebounce';
 
 const InventoryPage = () => {
   const dispatch = useDispatch();
@@ -35,14 +40,21 @@ const InventoryPage = () => {
   const [qtyChange, setQtyChange] = useState('');
   const [note, setNote] = useState('');
   const [ledgerPage, setLedgerPage] = useState(1);
+  const [confirmAdjust, setConfirmAdjust] = useState(false);
+  const [ledgerSearch, setLedgerSearch] = useState('');
+  const debouncedLedgerSearch = useDebounce(ledgerSearch);
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchStockLedger({ page: ledgerPage, limit: 20 }));
-  }, [dispatch, ledgerPage]);
+    dispatch(fetchStockLedger({
+      page: ledgerPage,
+      limit: 20,
+      search: debouncedLedgerSearch,
+    }));
+  }, [debouncedLedgerSearch, dispatch, ledgerPage]);
 
   const handleAdjust = () => {
     dispatch(
@@ -59,7 +71,11 @@ const InventoryPage = () => {
         setQtyChange('');
         setNote('');
         dispatch(fetchProducts());
-        dispatch(fetchStockLedger({ page: ledgerPage, limit: 20 }));
+        dispatch(fetchStockLedger({
+          page: ledgerPage,
+          limit: 20,
+          search: debouncedLedgerSearch,
+        }));
       })
       .catch((error) => toast.error(error.message));
   };
@@ -70,30 +86,42 @@ const InventoryPage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow">
-        <h2 className="text-lg font-semibold text-slate-800">Inventory</h2>
-      </div>
-      <div className="rounded-xl bg-white p-4 shadow">
+    <div className="space-y-5">
+      <PageHeader
+        title="Inventory"
+        description="Monitor stock levels and review ledger movement across products."
+      />
+      <Card>
         <InventoryTable
           isLoading={isLoading}
           onAdjust={openAdjustModal}
           products={products}
           user={user}
         />
-      </div>
+      </Card>
 
-      <div className="rounded-xl bg-white p-4 shadow">
+      <Card>
         <h3 className="mb-4 text-base font-semibold text-slate-800">
           Stock Ledger
         </h3>
+        <div className="mb-4 max-w-md">
+          <Input
+            label="Search ledger"
+            placeholder="Search by product name or SKU"
+            value={ledgerSearch}
+            onChange={(event) => {
+              setLedgerSearch(event.target.value);
+              setLedgerPage(1);
+            }}
+          />
+        </div>
         <StockLedgerTable
           isLoading={isLedgerLoading}
           ledger={ledger}
           onPageChange={setLedgerPage}
           pagination={ledgerPagination}
         />
-      </div>
+      </Card>
 
       <AdjustStockModal
         isAdjusting={isAdjusting}
@@ -102,9 +130,23 @@ const InventoryPage = () => {
         onClose={() => setAdjustOpen(false)}
         onNoteChange={setNote}
         onQtyChange={setQtyChange}
-        onSubmit={handleAdjust}
+        onSubmit={() => setConfirmAdjust(true)}
         qtyChange={qtyChange}
         selectedProduct={selectedProduct}
+      />
+      <ConfirmDialog
+        open={confirmAdjust}
+        title="Apply stock adjustment?"
+        description={`This will change ${selectedProduct?.name || 'the product'} stock by ${Number(qtyChange) || 0}.`}
+        confirmLabel="Apply adjustment"
+        loadingLabel="Saving..."
+        variant="danger"
+        loading={isAdjusting}
+        onCancel={() => setConfirmAdjust(false)}
+        onConfirm={() => {
+          setConfirmAdjust(false);
+          handleAdjust();
+        }}
       />
     </div>
   );

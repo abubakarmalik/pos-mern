@@ -11,7 +11,7 @@ const SalesTable = ({ isLoading, sales }) => {
       render: (row) => (
         <Link
           to={`/sales/${row.id}`}
-          className="font-medium text-blue-600 hover:underline"
+          className="font-medium text-cyan-700 hover:underline"
         >
           {row.invoiceNo}
         </Link>
@@ -38,8 +38,15 @@ const SalesTable = ({ isLoading, sales }) => {
     },
   ];
 
-  if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-  return <Table columns={columns} data={sales} />;
+  return (
+    <Table
+      columns={columns}
+      data={sales}
+      isLoading={isLoading}
+      emptyTitle="No sales found"
+      emptyDescription="Sales will appear here after checkout is completed."
+    />
+  );
 };
 
 export default SalesTable;

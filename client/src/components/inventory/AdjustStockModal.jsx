@@ -24,13 +24,14 @@ const AdjustStockModal = ({
         type="number"
         value={qtyChange}
         onChange={(event) => onQtyChange(event.target.value)}
+        helperText="Use a negative number to reduce stock."
       />
       <Input
         label="Note"
         value={note}
         onChange={(event) => onNoteChange(event.target.value)}
       />
-      <Button onClick={onSubmit} disabled={isAdjusting} className="w-full">
+      <Button onClick={onSubmit} loading={isAdjusting} className="w-full">
         {isAdjusting ? 'Saving...' : 'Apply Adjustment'}
       </Button>
     </div>

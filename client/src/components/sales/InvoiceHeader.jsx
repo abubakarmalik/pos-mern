@@ -1,18 +1,25 @@
 const InvoiceHeader = ({ sale, settings }) => (
-  <div className="flex justify-between">
-    <div>
-      <h2 className="text-xl font-semibold text-slate-800">
-        {settings?.shopName || 'Minimal POS'}
-      </h2>
-      <p className="text-sm text-slate-500">{settings?.address}</p>
-      <p className="text-sm text-slate-500">{settings?.phone}</p>
+  <header className="border-b border-dashed border-slate-400 pb-4 text-center">
+    <h2 className="text-lg font-bold uppercase tracking-wide text-slate-950">
+      {settings?.shopName || 'Minimal POS'}
+    </h2>
+    {settings?.address && <p className="mt-1 text-xs text-slate-600">{settings.address}</p>}
+    {settings?.phone && <p className="text-xs text-slate-600">Tel: {settings.phone}</p>}
+    <div className="mt-4 space-y-1 text-left text-xs text-slate-700">
+      <div className="flex justify-between gap-3">
+        <span>Invoice</span>
+        <span className="font-semibold">{sale.invoiceNo}</span>
+      </div>
+      <div className="flex justify-between gap-3">
+        <span>Date</span>
+        <span>{new Date(sale.createdAt).toLocaleString()}</span>
+      </div>
+      <div className="flex justify-between gap-3">
+        <span>Cashier</span>
+        <span>{sale.cashier?.name || 'Staff'}</span>
+      </div>
     </div>
-    <div className="text-right text-sm text-slate-600">
-      <p>Invoice: {sale.invoiceNo}</p>
-      <p>{new Date(sale.createdAt).toLocaleString()}</p>
-      <p>Cashier: {sale.cashierId?.name || 'Staff'}</p>
-    </div>
-  </div>
+  </header>
 );
 
 export default InvoiceHeader;

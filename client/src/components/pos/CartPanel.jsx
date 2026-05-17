@@ -1,4 +1,5 @@
 import Button from '../ui/Button';
+import Card from '../ui/Card';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Table from '../ui/Table';
@@ -79,10 +80,16 @@ const CartPanel = ({
   ];
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow">
-      <h2 className="text-lg font-semibold text-slate-800">Cart</h2>
+    <Card>
+      <h2 className="text-base font-semibold text-slate-900">Cart</h2>
       <div className="mt-4">
-        <Table columns={cartColumns} data={cart} />
+        <Table
+          columns={cartColumns}
+          data={cart}
+          emptyTitle="Cart is empty"
+          emptyDescription="Select products from the catalog to begin checkout."
+          minWidth="min-w-[620px]"
+        />
       </div>
       <div className="mt-4 space-y-2">
         <Input
@@ -145,12 +152,12 @@ const CartPanel = ({
         <Button
           className="w-full"
           onClick={onCheckout}
-          disabled={isCreatingSale}
+          loading={isCreatingSale}
         >
           {isCreatingSale ? 'Processing...' : 'Complete Sale'}
         </Button>
       </div>
-    </div>
+    </Card>
   );
 };
 

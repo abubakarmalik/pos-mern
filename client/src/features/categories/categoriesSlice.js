@@ -116,7 +116,6 @@ const categoriesSlice = createSlice({
         state.items = action.payload?.data?.items || [];
         state.pagination =
           action.payload?.data?.pagination || initialState.pagination;
-        state.message = action.payload?.message || null;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.isLoading = false;

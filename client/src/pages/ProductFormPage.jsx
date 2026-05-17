@@ -3,10 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductForm from '../components/products/ProductForm';
+import Card from '../components/ui/Card';
+import { PageLoader } from '../components/ui/Loader';
 import { fetchCategories } from '../features/categories/categoriesSlice';
 import { selectCategories } from '../features/categories/selectors';
 import {
   clearCurrentProduct,
+  clearProductsMessage,
   createProduct,
   fetchProduct,
   updateProduct,
@@ -20,6 +23,7 @@ import {
 const defaultForm = {
   name: '',
   sku: '',
+  barcode: '',
   category: '',
   categoryId: '',
   costPrice: 0,
@@ -40,6 +44,7 @@ const ProductFormPage = () => {
   const isLoading = useSelector(selectCurrentProductLoading);
   const isSaving = useSelector(selectProductSaving);
   const [form, setForm] = useState(defaultForm);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -49,20 +54,24 @@ const ProductFormPage = () => {
     if (!id) {
       dispatch(clearCurrentProduct());
       setForm(defaultForm);
+      setLoadError('');
       return;
     }
 
+    setLoadError('');
     dispatch(fetchProduct(id))
       .unwrap()
-      .catch((error) => toast.error(error.message));
+      .catch((error) => setLoadError(error.message));
   }, [dispatch, id]);
 
   useEffect(() => {
+    if (!id) return;
     if (!product) return;
 
     setForm({
       name: product.name,
       sku: product.sku || '',
+      barcode: product.barcode || '',
       category: product.category || '',
       categoryId: product.categoryId || '',
       costPrice: product.costPrice,
@@ -73,7 +82,7 @@ const ProductFormPage = () => {
       stockOnHand: product.stockOnHand,
       isActive: product.isActive,
     });
-  }, [product]);
+  }, [id, product]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -87,6 +96,7 @@ const ProductFormPage = () => {
     event.preventDefault();
     const payload = {
       ...form,
+      barcode: form.barcode?.trim() || null,
       categoryId: form.categoryId || undefined,
       categoryName: form.categoryId ? undefined : form.category || undefined,
       minStock: form.minStock === '' ? null : Number(form.minStock),
@@ -104,12 +114,22 @@ const ProductFormPage = () => {
       .unwrap()
       .then(() => {
         toast.success(id ? 'Product updated' : 'Product created');
+        dispatch(clearProductsMessage());
         navigate('/products');
       })
       .catch((error) => toast.error(error.message));
   };
 
-  if (id && isLoading) return <div>Loading...</div>;
+  if (id && isLoading) return <PageLoader label="Loading product" />;
+  if (loadError) {
+    return (
+      <Card>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <ProductForm

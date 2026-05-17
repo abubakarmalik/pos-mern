@@ -27,7 +27,7 @@ const productParamSchema = z.object({
 const productBody = z.object({
   name: z.string().min(1),
   sku: z.string().min(1),
-  barcode: z.string().optional().nullable(),
+  barcode: z.string().trim().max(128).optional().nullable(),
   categoryId: z.string().uuid().optional().nullable(),
   categoryName: z.string().optional().nullable(),
   category: z.string().optional().nullable(),

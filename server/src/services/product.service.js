@@ -34,7 +34,12 @@ const toProductData = async (payload, { partial = false } = {}) => {
 
   if (payload.name !== undefined) data.name = payload.name;
   if (payload.sku !== undefined) data.sku = payload.sku;
-  if (payload.barcode !== undefined) data.barcode = payload.barcode || null;
+  if (payload.barcode !== undefined) {
+    const barcode = typeof payload.barcode === 'string'
+      ? payload.barcode.trim()
+      : payload.barcode;
+    data.barcode = barcode || null;
+  }
   if (payload.unit !== undefined) data.unit = payload.unit || 'pcs';
   if (payload.costPrice !== undefined) data.cost_price = payload.costPrice;
   if (payload.salePrice !== undefined) data.sale_price = payload.salePrice;

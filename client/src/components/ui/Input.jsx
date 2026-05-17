@@ -1,11 +1,17 @@
-const Input = ({ label, error, className = '', ...props }) => (
+import { theme } from '../../theme/tokens';
+
+const Input = ({ label, error, helperText, className = '', ...props }) => (
   <label className="block text-sm">
-    {label && <span className="text-slate-600">{label}</span>}
+    {label && <span className={theme.form.label}>{label}</span>}
     <input
-      className={`mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 ${className}`}
+      className={`mt-1 ${theme.form.field} ${
+        error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : ''
+      } ${className}`}
+      aria-invalid={Boolean(error)}
       {...props}
     />
-    {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
+    {helperText && !error && <span className={theme.form.help}>{helperText}</span>}
+    {error && <span className={theme.form.error}>{error}</span>}
   </label>
 );
 

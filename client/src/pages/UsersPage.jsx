@@ -1,8 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { FiPlus } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageHeader from '../components/ui/PageHeader';
 import UsersTable from '../components/users/UsersTable';
 import { selectUser } from '../features/auth/authSelector';
 import {
@@ -26,16 +30,11 @@ const UsersPage = () => {
   const isToggling = useSelector(selectUsersToggling);
   const error = useSelector(selectUsersError);
   const message = useSelector(selectUsersMessage);
+  const [pendingToggle, setPendingToggle] = useState(null);
 
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (!error) return;
-    toast.error(error);
-    dispatch(clearUsersMessage());
-  }, [dispatch, error]);
 
   useEffect(() => {
     if (!message) return;
@@ -43,30 +42,50 @@ const UsersPage = () => {
     dispatch(clearUsersMessage());
   }, [dispatch, message]);
 
-  const handleToggle = (id) => {
-    dispatch(toggleUser(id)).catch(() => {});
+  const handleToggle = () => {
+    dispatch(toggleUser(pendingToggle.id))
+      .unwrap()
+      .catch((toggleError) => toast.error(toggleError.message))
+      .finally(() => setPendingToggle(null));
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl bg-white p-4 shadow">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-800">Users</h2>
+    <div className="space-y-5">
+      <PageHeader
+        title="Users"
+        description="Manage staff access and role status."
+        actions={
           <Link to="/users/new">
-            <Button>Create User</Button>
+            <Button leftIcon={<FiPlus />}>Create User</Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="rounded-xl bg-white p-4 shadow">
+      <Card>
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <UsersTable
           currentUser={currentUser}
           isLoading={isLoading}
           isToggling={isToggling}
-          onToggle={handleToggle}
+          onToggle={setPendingToggle}
           users={users}
         />
-      </div>
+      </Card>
+      <ConfirmDialog
+        open={Boolean(pendingToggle)}
+        title={`${pendingToggle?.isActive ? 'Disable' : 'Enable'} user?`}
+        description="This changes whether the user can sign in and access the dashboard."
+        confirmLabel={pendingToggle?.isActive ? 'Disable user' : 'Enable user'}
+        loadingLabel="Updating..."
+        variant={pendingToggle?.isActive ? 'danger' : 'primary'}
+        loading={isToggling}
+        onCancel={() => setPendingToggle(null)}
+        onConfirm={handleToggle}
+      />
     </div>
   );
 };

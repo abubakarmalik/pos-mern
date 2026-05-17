@@ -1,10 +1,13 @@
 import Button from '../ui/Button';
+import FormSection from '../ui/FormSection';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 
 const UserForm = ({ form, isCreating, onChange, onSubmit }) => (
-  <div className="rounded-xl bg-white p-6 shadow">
-    <h2 className="text-lg font-semibold text-slate-800">New User</h2>
+  <FormSection
+    title="New User"
+    description="Create staff access with the correct operational role."
+  >
     <form onSubmit={onSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
       <Input
         label="Name"
@@ -33,12 +36,12 @@ const UserForm = ({ form, isCreating, onChange, onSubmit }) => (
         <option value="ADMIN">Admin</option>
       </Select>
       <div className="md:col-span-2 flex justify-end">
-        <Button type="submit" disabled={isCreating}>
+        <Button type="submit" loading={isCreating}>
           {isCreating ? 'Creating...' : 'Save User'}
         </Button>
       </div>
     </form>
-  </div>
+  </FormSection>
 );
 
 export default UserForm;

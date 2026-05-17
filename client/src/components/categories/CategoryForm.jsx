@@ -1,4 +1,5 @@
 import Button from '../ui/Button';
+import FormSection from '../ui/FormSection';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 
@@ -10,10 +11,10 @@ const CategoryForm = ({
   onStatusChange,
   onSubmit,
 }) => (
-  <div className="rounded-xl bg-white p-6 shadow">
-    <h2 className="text-lg font-semibold text-slate-800">
-      {isEdit ? 'Edit Category' : 'New Category'}
-    </h2>
+  <FormSection
+    title={isEdit ? 'Edit Category' : 'New Category'}
+    description="Category names appear in filters, product forms, and reports."
+  >
     <form onSubmit={onSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
       <Input
         label="Name"
@@ -39,12 +40,12 @@ const CategoryForm = ({
         className="md:col-span-2"
       />
       <div className="md:col-span-2 flex justify-end">
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Category'}
+        <Button type="submit" loading={isSaving}>
+          {isSaving ? (isEdit ? 'Updating...' : 'Creating...') : 'Save Category'}
         </Button>
       </div>
     </form>
-  </div>
+  </FormSection>
 );
 
 export default CategoryForm;

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import SalesFilters from '../components/sales/SalesFilters';
 import SalesTable from '../components/sales/SalesTable';
+import Card from '../components/ui/Card';
+import PageHeader from '../components/ui/PageHeader';
+import Pagination from '../components/ui/Pagination';
 import { fetchSales } from '../features/sales/salesSlice';
 import {
   selectSales,
   selectSalesLoading,
   selectSalesPagination,
 } from '../features/sales/selectors';
+import useDebounce from '../hooks/useDebounce';
 
 const SalesListPage = () => {
   const dispatch = useDispatch();
@@ -18,15 +21,19 @@ const SalesListPage = () => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
+  const debouncedFrom = useDebounce(from);
+  const debouncedTo = useDebounce(to);
 
   useEffect(() => {
-    dispatch(fetchSales({ page, limit: 20, dateFrom: from, dateTo: to }))
-      .unwrap()
-      .catch((error) => toast.error(error.message));
-  }, [dispatch, from, page, to]);
+    dispatch(fetchSales({ page, limit: 20, dateFrom: debouncedFrom, dateTo: debouncedTo }));
+  }, [debouncedFrom, debouncedTo, dispatch, page]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <PageHeader
+        title="Sales"
+        description="Review invoices, totals, payment activity, and refund status."
+      />
       <SalesFilters
         from={from}
         onFromChange={(value) => {
@@ -39,33 +46,10 @@ const SalesListPage = () => {
         }}
         to={to}
       />
-      <div className="rounded-xl bg-white p-4 shadow">
+      <Card className="space-y-4">
         <SalesTable isLoading={isLoading} sales={sales} />
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-          <span>
-            Page {pagination.page} of {pagination.totalPages || 1} ·{' '}
-            {pagination.total} sales
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={pagination.page <= 1}
-              onClick={() => setPage(pagination.page - 1)}
-              className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={pagination.page >= pagination.totalPages}
-              onClick={() => setPage(pagination.page + 1)}
-              className="rounded-md border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-400"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
+        <Pagination pagination={pagination} onPageChange={setPage} itemLabel="sales" />
+      </Card>
     </div>
   );
 };

@@ -1,8 +1,10 @@
+import { FiSliders } from 'react-icons/fi';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Table from '../ui/Table';
 
 const InventoryTable = ({ isLoading, onAdjust, products, user }) => {
+  const isAdmin = user?.role === 'ADMIN';
   const columns = [
     {
       key: 'name',
@@ -27,22 +29,31 @@ const InventoryTable = ({ isLoading, onAdjust, products, user }) => {
       ),
     },
     { key: 'unit', label: 'Unit' },
-    {
+    isAdmin && {
       key: 'action',
       label: 'Action',
-      render: (row) =>
-        user?.role === 'ADMIN' ? (
-          <Button variant="ghost" size="sm" onClick={() => onAdjust(row)}>
-            Adjust
-          </Button>
-        ) : (
-          <span className="text-xs text-slate-400">View only</span>
-        ),
+      render: (row) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          leftIcon={<FiSliders />}
+          onClick={() => onAdjust(row)}
+        >
+          Adjust
+        </Button>
+      ),
     },
-  ];
+  ].filter(Boolean);
 
-  if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-  return <Table columns={columns} data={products} />;
+  return (
+    <Table
+      columns={columns}
+      data={products}
+      isLoading={isLoading}
+      emptyTitle="No inventory products"
+      emptyDescription="Products will appear here after they are created."
+    />
+  );
 };
 
 export default InventoryTable;

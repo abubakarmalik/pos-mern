@@ -21,12 +21,13 @@ import {
   selectIsAuthenticated,
   selectUser,
 } from '../features/auth/authSelector';
+import { PageLoader } from '../components/ui/Loader';
 
 const RequireAuth = ({ children }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const isLoading = useSelector(selectAuthLoading);
 
-  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (isLoading) return <PageLoader label="Preparing dashboard" />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };

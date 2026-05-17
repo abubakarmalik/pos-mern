@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ProductsHeader from '../components/products/ProductsHeader';
 import ProductsTable from '../components/products/ProductsTable';
+import PageHeader from '../components/ui/PageHeader';
 import { selectUser } from '../features/auth/authSelector';
+import useDebounce from '../hooks/useDebounce';
 
 const ProductsPage = () => {
   const user = useSelector(selectUser);
@@ -11,17 +13,18 @@ const ProductsPage = () => {
   const [isActive, setIsActive] = useState('');
   const [lowStock, setLowStock] = useState(false);
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search);
 
   const filters = useMemo(
     () => ({
       page,
       limit: 20,
-      search,
+      search: debouncedSearch,
       categoryId,
       isActive,
       lowStock,
     }),
-    [categoryId, isActive, lowStock, page, search],
+    [categoryId, debouncedSearch, isActive, lowStock, page],
   );
 
   const handleSearchChange = (value) => {
@@ -30,7 +33,11 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <PageHeader
+        title="Products"
+        description="Manage pricing, stock status, categories, and active products for the POS catalog."
+      />
       <ProductsHeader
         categoryId={categoryId}
         isActive={isActive}
@@ -51,12 +58,7 @@ const ProductsPage = () => {
         search={search}
         user={user}
       />
-      <div className="rounded-xl bg-white p-4 shadow">
-        <ProductsTable
-          filters={filters}
-          onPageChange={setPage}
-        />
-      </div>
+      <ProductsTable filters={filters} onPageChange={setPage} />
     </div>
   );
 };

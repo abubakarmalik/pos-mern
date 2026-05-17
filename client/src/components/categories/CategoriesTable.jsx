@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { FiEdit2, FiPower } from 'react-icons/fi';
 import Badge from '../ui/Badge';
+import Button from '../ui/Button';
 import Table from '../ui/Table';
 
 const CategoriesTable = ({ categories, isLoading, isToggling, onToggle }) => {
@@ -32,25 +34,34 @@ const CategoriesTable = ({ categories, isLoading, isToggling, onToggle }) => {
         <div className="flex gap-2">
           <Link
             to={`/categories/${row.id}/edit`}
-            className="text-xs font-medium text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-50"
           >
+            <FiEdit2 />
             Edit
           </Link>
-          <button
-            type="button"
-            onClick={() => onToggle(row.id)}
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<FiPower />}
+            onClick={() => onToggle(row)}
             disabled={isToggling}
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
           >
             {row.isActive ? 'Disable' : 'Enable'}
-          </button>
+          </Button>
         </div>
       ),
     },
   ];
 
-  if (isLoading) return <p className="text-sm text-slate-500">Loading...</p>;
-  return <Table columns={columns} data={categories} />;
+  return (
+    <Table
+      columns={columns}
+      data={categories}
+      isLoading={isLoading}
+      emptyTitle="No categories found"
+      emptyDescription="Create a category or adjust the filters."
+    />
+  );
 };
 
 export default CategoriesTable;

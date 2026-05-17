@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import Button from '../components/ui/Button';
+import FormSection from '../components/ui/FormSection';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
 import Select from '../components/ui/Select';
 import { fetchSettings, updateSettings } from '../features/settings/settingsSlice';
 import {
@@ -23,9 +25,7 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchSettings())
-      .unwrap()
-      .catch((error) => toast.error(error.message));
+    dispatch(fetchSettings());
   }, [dispatch]);
 
   useEffect(() => {
@@ -49,9 +49,13 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow">
-      <h2 className="text-lg font-semibold text-slate-800">Settings</h2>
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
+    <div className="space-y-5">
+      <PageHeader
+        title="Settings"
+        description="Configure receipt and inventory behavior used across checkout."
+      />
+      <FormSection title="Store profile" description="These values appear in invoices and POS totals.">
+        <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
         <Input label="Shop Name" name="shopName" value={form.shopName} onChange={handleChange} />
         <Input label="Phone" name="phone" value={form.phone} onChange={handleChange} />
         <Input label="Address" name="address" value={form.address} onChange={handleChange} />
@@ -66,11 +70,12 @@ const SettingsPage = () => {
           <option value="true">Yes</option>
         </Select>
         <div className="md:col-span-2 flex justify-end">
-          <Button type="submit" disabled={isSaving}>
+          <Button type="submit" loading={isSaving}>
             {isSaving ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </form>
+      </FormSection>
     </div>
   );
 };

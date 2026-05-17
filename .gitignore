@@ -1,37 +1,102 @@
-# Dependency directory
-/server/node_modules
-/client/node_modules
-/client/dist
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
 
+# Production builds
+build/
+dist/
+out/
+client/build/
+client/dist/
+server/build/
+server/dist/
+public/build/
 
-# Log files
+# Vite and frontend caches
+.vite/
+client/.vite/
+client/node_modules/.vite/
+
+# Prisma
+server/node_modules/.prisma/
+server/src/generated/prisma/
+server/prisma/generated/
+
+# Keep Prisma schema and migrations tracked
+!server/prisma/schema.prisma
+!server/prisma/migrations/
+!server/prisma/migrations/**
+
+# Logs
+logs/
+log/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-/logs
-/log
-/tmp
+pnpm-debug.log*
+lerna-debug.log*
 
-# Environment variables
+# Coverage and test output
+coverage/
+client/coverage/
+server/coverage/
+.nyc_output/
+
+# Environment files
 .env
-# .env.local
-# .env.development.local
-# .env.test.local
-# .env.production.local
+.env.*
+client/.env
+client/.env.*
+server/.env
+server/.env.*
+!.env.example
+!client/.env.example
+!server/.env.example
 
-# Build directories
-/build
-/dist
-/public/build
-/out
+# Uploads, receipts, and temporary runtime files
+uploads/
+server/uploads/
+client/uploads/
+receipts/
+server/receipts/
+tmp/
+temp/
+client/tmp/
+server/tmp/
+client/temp/
+server/temp/
 
-# Operating system files
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+
+# Keep lockfiles tracked for the package manager in use.
+# If the project standardizes on npm, remove conflicting yarn/pnpm locks before committing.
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Other
-/coverage
-.vscode/
-.idea/
+# Local databases and generated dumps
 *.sqlite
+*.sqlite3
 *.sqlite-journal
+*.db
+*.dump
+
+# Miscellaneous caches
+.cache/
+.eslintcache
+.stylelintcache

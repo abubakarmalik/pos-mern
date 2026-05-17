@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import CartPanel from '../components/pos/CartPanel';
 import ProductPicker from '../components/pos/ProductPicker';
+import PageHeader from '../components/ui/PageHeader';
 import { fetchProducts } from '../features/products/productsSlice';
 import {
   selectProducts,
@@ -16,6 +17,7 @@ import {
 } from '../features/sales/selectors';
 import { fetchSettings } from '../features/settings/settingsSlice';
 import { selectCurrencySymbol } from '../features/settings/selectors';
+import useDebounce from '../hooks/useDebounce';
 
 const PosPage = () => {
   const dispatch = useDispatch();
@@ -25,6 +27,7 @@ const PosPage = () => {
   const [cartDiscount, setCartDiscount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [cashReceived, setCashReceived] = useState('');
+  const debouncedSearch = useDebounce(search);
   const products = useSelector(selectProducts);
   const isLoadingProducts = useSelector(selectProductsLoading);
   const isCreatingSale = useSelector(selectSaleCreating);
@@ -36,8 +39,8 @@ const PosPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchProducts({ search, isActive: true, limit: 100 }));
-  }, [dispatch, search]);
+    dispatch(fetchProducts({ search: debouncedSearch, isActive: true, limit: 100 }));
+  }, [debouncedSearch, dispatch]);
 
   useEffect(() => {
     if (!lastCreatedSale?.id) return;
@@ -137,8 +140,13 @@ const PosPage = () => {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="space-y-4">
+    <div className="space-y-5">
+      <PageHeader
+        title="Point of Sale"
+        description="Build the cart, apply discounts, and complete checkout."
+      />
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-4">
         <ProductPicker
           currencySymbol={currencySymbol}
           isLoading={isLoadingProducts}
@@ -147,9 +155,9 @@ const PosPage = () => {
           products={products}
           search={search}
         />
-      </div>
+        </div>
 
-      <div className="space-y-4">
+        <div className="space-y-4">
         <CartPanel
           cart={cart}
           cartDiscount={cartDiscount}
@@ -166,6 +174,7 @@ const PosPage = () => {
           paymentMethod={paymentMethod}
           totals={totals}
         />
+        </div>
       </div>
     </div>
   );
