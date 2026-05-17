@@ -12,6 +12,7 @@ import ProductFormPage from '../pages/ProductFormPage';
 import InventoryPage from '../pages/InventoryPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
+import UsersPage from '../pages/UsersPage';
 import {
   selectAuthLoading,
   selectIsAuthenticated,
@@ -72,6 +73,14 @@ const AppRoutes = () => (
       />
       <Route path="/inventory" element={<InventoryPage />} />
       <Route path="/reports" element={<ReportsPage />} />
+      <Route
+        path="/users"
+        element={
+          <RequireRole roles={['ADMIN']}>
+            <UsersPage />
+          </RequireRole>
+        }
+      />
       <Route
         path="/settings"
         element={

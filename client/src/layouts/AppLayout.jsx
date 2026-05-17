@@ -11,6 +11,7 @@ const navItems = [
   { to: '/products', label: 'Products' },
   { to: '/inventory', label: 'Inventory' },
   { to: '/reports', label: 'Reports' },
+  { to: '/users', label: 'Users', role: 'ADMIN' },
   { to: '/settings', label: 'Settings', role: 'ADMIN' },
 ];
 
@@ -45,7 +46,7 @@ const AppLayout = () => {
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-800">
-            Abubakar's POS
+            POS
           </h2>
           <button
             type="button"

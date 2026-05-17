@@ -12,6 +12,16 @@ export const selectUsersLoading = createSelector(
   (users) => users.isLoading,
 );
 
+export const selectUsersCreating = createSelector(
+  [selectUsersState],
+  (users) => users.isCreating,
+);
+
+export const selectUsersToggling = createSelector(
+  [selectUsersState],
+  (users) => users.isToggling,
+);
+
 export const selectUsersMessage = createSelector(
   [selectUsersState],
   (users) => users.message,

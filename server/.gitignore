@@ -32,3 +32,6 @@ Thumbs.db
 .idea/
 *.sqlite
 *.sqlite-journal
+/src/generated/prisma
+
+/src/generated/prisma

@@ -46,6 +46,5 @@ npm run seed
 
 ## Login
 
-- Admin: `admin@example.com` / `Admin@123`
+- Admin: `admin` / `admin@123`
 - Cashier: `cashier@example.com` / `Cashier@123`
-

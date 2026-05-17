@@ -1,5 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { clearAuthStorage, getAuthStorage, setAuthStorage } from '../../utils/authStorage';
+import {
+  clearAuthStorage,
+  getAuthStorage,
+  setAuthStorage,
+} from '../../utils/authStorage';
 import { fetchCurrentUserApi, loginUser, logoutUser } from './api';
 
 const authStorage = getAuthStorage();
@@ -13,36 +17,51 @@ const initialState = {
   error: null,
 };
 
-export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { getState, rejectWithValue }) => {
-  try {
-    const { auth } = getState();
-    if (!auth?.token) return null;
-    const response = await fetchCurrentUserApi();
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response?.data || { message: error.message });
-  }
-});
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const { auth } = getState();
+      if (!auth?.token) return null;
+      const response = await fetchCurrentUserApi();
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: error.message },
+      );
+    }
+  },
+);
 
-export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
-  try {
-    const response = await loginUser({ email, password });
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response?.data || { message: error.message });
-  }
-});
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ username, password }, { rejectWithValue }) => {
+    try {
+      const response = await loginUser({ username, password });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: error.message },
+      );
+    }
+  },
+);
 
-export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
-  try {
-    const response = await logoutUser();
-    clearAuthStorage();
-    return response.data;
-  } catch (error) {
-    clearAuthStorage();
-    return rejectWithValue(error.response?.data || { message: error.message });
-  }
-});
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await logoutUser();
+      clearAuthStorage();
+      return response.data;
+    } catch (error) {
+      clearAuthStorage();
+      return rejectWithValue(
+        error.response?.data || { message: error.message },
+      );
+    }
+  },
+);
 
 const authSlice = createSlice({
   name: 'auth',

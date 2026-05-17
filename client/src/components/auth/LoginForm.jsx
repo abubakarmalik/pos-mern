@@ -11,7 +11,7 @@ const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoading = useSelector(selectAuthLoading);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ username: '', password: '' });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -26,9 +26,25 @@ const LoginForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input label="Email" type="email" name="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
-      <Input label="Password" type="password" name="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} required />
-      <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? 'Signing in...' : 'Sign In'}</Button>
+      <Input
+        label="Username"
+        type="text"
+        name="username"
+        value={form.username}
+        onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+        required
+      />
+      <Input
+        label="Password"
+        type="password"
+        name="password"
+        value={form.password}
+        onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+        required
+      />
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? 'Signing in...' : 'Sign In'}
+      </Button>
     </form>
   );
 };

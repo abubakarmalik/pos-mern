@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const env = require('../../config/env');
-const User = require('../models/user.model');
+const { prisma } = require('../../config/prisma');
 const { sendError } = require('../utils/response');
+const { mapUser } = require('../utils/userMapper');
 
 const extractToken = (req) => {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -11,9 +12,11 @@ const extractToken = (req) => {
   return token;
 };
 
+const getUserId = (user) => user.id || user._id?.toString();
+
 const signToken = (user) =>
   jwt.sign(
-    { id: user._id.toString(), role: user.role },
+    { id: getUserId(user), role: user.role },
     env.JWT_SECRET,
     { expiresIn: env.JWT_EXPIRES_IN || '7d' },
   );
@@ -28,19 +31,16 @@ const requireAuth = async (req, res, next) => {
       });
 
     const payload = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(payload.id);
-    if (!user || !user.isActive)
+    const user = await prisma.users.findUnique({
+      where: { id: payload.id },
+    });
+    if (!user || !user.is_active)
       return sendError(res, 401, 'User is not authorized', {
         code: 'UNAUTHORIZED',
         details: null,
       });
 
-    req.user = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
+    req.user = mapUser(user);
     return next();
   } catch (error) {
     return sendError(res, 401, 'Invalid or expired token', {
