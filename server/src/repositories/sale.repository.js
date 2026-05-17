@@ -41,7 +41,7 @@ const buildWhere = ({
   return where;
 };
 
-const transaction = (callback) => prisma.$transaction(callback);
+const transaction = (callback, options) => prisma.$transaction(callback, options);
 
 const countByInvoiceDate = (dateKey, db = prisma) =>
   db.sales.count({

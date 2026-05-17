@@ -38,13 +38,15 @@ const buildWhere = ({
   return where;
 };
 
-const transaction = (callback) => prisma.$transaction(callback);
+const transaction = (callback, options) => prisma.$transaction(callback, options);
 
 const create = (data, db = prisma) =>
   db.stock_ledger.create({
     data,
     include: includeRelations,
   });
+
+const createMany = (data, db = prisma) => db.stock_ledger.createMany({ data });
 
 const findManyPaginated = async (query = {}) => {
   const { page, limit, skip } = getPaginationParams(query);
@@ -82,6 +84,7 @@ const getRefundedQtyBySaleId = async (saleId, db = prisma) => {
 
 module.exports = {
   create,
+  createMany,
   findManyPaginated,
   getRefundedQtyBySaleId,
   transaction,

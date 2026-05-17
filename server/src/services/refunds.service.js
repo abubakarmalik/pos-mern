@@ -8,6 +8,11 @@ const { mapRefund } = require('../utils/refundMapper');
 const createServiceError = (message, errorCode, status, details = null) =>
   Object.assign(new Error(message), { status, errorCode, details });
 
+const REFUND_TRANSACTION_OPTIONS = {
+  maxWait: 10000,
+  timeout: 20000,
+};
+
 const roundMoney = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 const toNumber = (value) => Number(value || 0);
@@ -205,9 +210,7 @@ const createRefund = async ({ payload, createdBy }) =>
       });
     }
 
-    await Promise.all(
-      ledgerEntries.map((entry) => stockLedgerRepository.create(entry, tx)),
-    );
+    await stockLedgerRepository.createMany(ledgerEntries, tx);
 
     if (isFullyRefunded({ soldSummary, refundedByProduct, requestedByProduct })) {
       await saleRepository.updateStatus(sale.id, 'REFUNDED', tx);
@@ -215,7 +218,7 @@ const createRefund = async ({ payload, createdBy }) =>
 
     const createdRefund = await refundRepository.findById(refund.id, tx);
     return mapRefund(createdRefund);
-  });
+  }, REFUND_TRANSACTION_OPTIONS);
 
 const listRefunds = async (query = {}) => {
   const { items, page, limit, total } =

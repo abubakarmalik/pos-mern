@@ -8,6 +8,11 @@ const { mapStockLedger } = require('../utils/stockLedgerMapper');
 const createServiceError = (message, errorCode, status, details = null) =>
   Object.assign(new Error(message), { status, errorCode, details });
 
+const INVENTORY_TRANSACTION_OPTIONS = {
+  maxWait: 10000,
+  timeout: 20000,
+};
+
 const adjustStock = async ({ productId, qtyChange, note, createdBy }) =>
   stockLedgerRepository.transaction(async (tx) => {
     const product = await productsRepository.findRawById(productId, tx);
@@ -58,7 +63,7 @@ const adjustStock = async ({ productId, qtyChange, note, createdBy }) =>
       product: mapProduct(updatedProduct),
       ledger: mapStockLedger(ledger),
     };
-  });
+  }, INVENTORY_TRANSACTION_OPTIONS);
 
 const listLedger = async (query = {}) => {
   const { items, page, limit, total } =

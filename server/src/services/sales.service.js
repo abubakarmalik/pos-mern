@@ -9,6 +9,11 @@ const { mapSale } = require('../utils/saleMapper');
 const createServiceError = (message, errorCode, status, details = null) =>
   Object.assign(new Error(message), { status, errorCode, details });
 
+const SALE_TRANSACTION_OPTIONS = {
+  maxWait: 10000,
+  timeout: 20000,
+};
+
 const formatInvoiceNo = (dateKey, seq) =>
   `POS-${dateKey}-${String(seq).padStart(4, '0')}`;
 
@@ -178,13 +183,11 @@ const createSale = async ({ payload, cashierId }) =>
       });
     }
 
-    await Promise.all(
-      ledgerEntries.map((entry) => stockLedgerRepository.create(entry, tx)),
-    );
+    await stockLedgerRepository.createMany(ledgerEntries, tx);
 
     const createdSale = await saleRepository.findById(sale.id, tx);
     return mapSale(createdSale);
-  });
+  }, SALE_TRANSACTION_OPTIONS);
 
 const listSales = async (query = {}) => {
   const { items, page, limit, total } =
